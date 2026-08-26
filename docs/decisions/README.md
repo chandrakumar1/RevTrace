@@ -34,7 +34,9 @@ What else was on the table and why it lost.
 
 | # | Title | Status | Phase |
 |---|---|---|---|
-| — | none yet | — | — |
+| [0001](0001-money-as-integer-minor-units.md) | Money as integer minor units | Accepted | 1 |
+| [0002](0002-uuid-primary-keys.md) | UUID primary keys | Accepted | 1 |
+| [0003](0003-status-columns-as-varchar-with-check-constraints.md) | Status columns as VARCHAR with CHECK constraints | Accepted | 1 |
 
 Phase 0's decisions are recorded in
 [../phase-0-environment.md](../phase-0-environment.md) §7 rather than as

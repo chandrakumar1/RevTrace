@@ -105,7 +105,7 @@ createdb revtrace_dev
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Repository and development environment inspection | ✅ Complete |
-| 1 | Backend foundation and database | Not started |
+| 1 | Backend foundation and database | 🔄 Built; migration pending review |
 | 2 | Synthetic event simulator | Not started |
 | 3 | Deterministic revenue-risk detection | Not started |
 | 4 | Revenue Leak Graph and timelines | Not started |

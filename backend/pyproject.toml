@@ -53,6 +53,13 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+# SQLAlchemy resolves relationship targets from quoted forward references via
+# its class registry at mapper-configuration time. Unquoting them (UP037) would
+# make resolution depend on module globals, where the TYPE_CHECKING-only
+# imports are absent at runtime.
+"app/models/*.py" = ["UP037"]
+
 [tool.mypy]
 python_version = "3.13"
 warn_unused_ignores = true
