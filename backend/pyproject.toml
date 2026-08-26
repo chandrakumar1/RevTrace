@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "revtrace-backend"
+version = "0.0.0"
+description = "RevTrace — AI revenue recovery system (Razorpay Buildathon, Track 03)"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+
+# NOTE (Phase 0): dependencies are DECLARED here only.
+# Nothing has been installed. Installation happens in Phase 1.
+# Lower bounds are intentionally loose; exact versions get locked at
+# first install and recorded then.
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.0",
+]
+
+# Deliberately NOT declared yet — these belong to later milestones and
+# declaring them now would pre-commit architectural choices Phase 0 has
+# no mandate to make:
+#   - Razorpay SDK        -> Phase 8 (Razorpay Test Mode integration)
+#   - Gemini / AI SDK     -> Phase 5 (AI diagnosis)
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.13"
+warn_unused_ignores = true
+warn_return_any = true
