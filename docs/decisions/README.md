@@ -37,6 +37,8 @@ What else was on the table and why it lost.
 | [0001](0001-money-as-integer-minor-units.md) | Money as integer minor units | Accepted | 1 |
 | [0002](0002-uuid-primary-keys.md) | UUID primary keys | Accepted | 1 |
 | [0003](0003-status-columns-as-varchar-with-check-constraints.md) | Status columns as VARCHAR with CHECK constraints | Accepted | 1 |
+| [0004](0004-simulator-emits-event-stream-not-database-writes.md) | The simulator emits an event stream, not database writes | Accepted | 2 |
+| [0005](0005-simulator-does-not-generate-recovery-or-risk-entities.md) | The simulator generates no risk or recovery entities | Accepted | 2 |
 
 Phase 0's decisions are recorded in
 [../phase-0-environment.md](../phase-0-environment.md) §7 rather than as

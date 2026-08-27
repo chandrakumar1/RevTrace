@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "revtrace-simulator"
+version = "0.1.0"
+description = "RevTrace deterministic synthetic event simulator (Phase 2)"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+
+# ZERO third-party dependencies. The simulator uses only the Python standard
+# library.
+#
+# It does import two first-party modules from the installed revtrace-backend
+# package — app.models.enums (the controlled vocabularies) and app.core.money
+# (integer minor-unit arithmetic) — so that vocabulary and money logic have a
+# single source of truth rather than being duplicated here and drifting.
+#
+# That is deliberately NOT declared as an install dependency: both packages are
+# installed editable into the same venv, and declaring it would create a
+# circular development relationship between backend and simulator.
+dependencies = []
+
+# The project directory IS the `simulator` package (the approved Phase 2 tree
+# puts modules at simulator/*.py rather than in a src/ or nested layout), so the
+# package roots are mapped explicitly rather than discovered.
+[tool.setuptools]
+packages = ["simulator", "simulator.scenarios"]
+
+[tool.setuptools.package-dir]
+simulator = "."
+"simulator.scenarios" = "scenarios"

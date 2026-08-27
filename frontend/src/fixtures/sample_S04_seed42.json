@@ -1,0 +1,152 @@
+{
+  "orders": [
+    {
+      "amount_minor": 230400,
+      "currency": "INR",
+      "order_ref": "sim_order_42_1",
+      "status": "attempted"
+    }
+  ],
+  "payment_attempts": [
+    {
+      "amount_minor": 230400,
+      "attempt_number": 1,
+      "attempted_at": "2026-01-01T00:00:30Z",
+      "currency": "INR",
+      "failure_code": "card_declined",
+      "failure_reason": "Card declined by the issuing bank",
+      "method": "card",
+      "payment_ref": "sim_pay_42_1",
+      "status": "failed"
+    },
+    {
+      "amount_minor": 230400,
+      "attempt_number": 2,
+      "attempted_at": "2026-01-01T00:04:34Z",
+      "currency": "INR",
+      "failure_code": "card_declined",
+      "failure_reason": "Card declined by the issuing bank",
+      "method": "card",
+      "payment_ref": "sim_pay_42_2",
+      "status": "failed"
+    },
+    {
+      "amount_minor": 230400,
+      "attempt_number": 3,
+      "attempted_at": "2026-01-01T00:06:36Z",
+      "currency": "INR",
+      "failure_code": "card_declined",
+      "failure_reason": "Card declined by the issuing bank",
+      "method": "card",
+      "payment_ref": "sim_pay_42_3",
+      "status": "failed"
+    }
+  ],
+  "recovery_state": null,
+  "revenue_risk": null,
+  "summary": {
+    "amount_at_risk_minor": 230400,
+    "amount_captured_minor": 0,
+    "currency": "INR",
+    "customers_total": 1,
+    "events_total": 7,
+    "events_unique": 7,
+    "merchant_name": "Synthetic Merchant 1",
+    "orders_total": 1,
+    "scenario_id": "S04",
+    "scenario_name": "repeated_payment_failure"
+  },
+  "timeline": [
+    {
+      "delay_seconds": 0,
+      "event_type": "order.created",
+      "external_event_id": "sim_evt_S04_42_000001",
+      "is_delayed": false,
+      "is_duplicate": false,
+      "is_out_of_order": false,
+      "occurred_at": "2026-01-01T00:00:00Z",
+      "order_ref": "sim_order_42_1",
+      "received_at": "2026-01-01T00:00:04Z",
+      "sequence": 1,
+      "summary": "Order created"
+    },
+    {
+      "delay_seconds": 0,
+      "event_type": "payment.attempted",
+      "external_event_id": "sim_evt_S04_42_000002",
+      "is_delayed": false,
+      "is_duplicate": false,
+      "is_out_of_order": false,
+      "occurred_at": "2026-01-01T00:00:30Z",
+      "order_ref": "sim_order_42_1",
+      "received_at": "2026-01-01T00:00:30Z",
+      "sequence": 2,
+      "summary": "Payment attempted \u2014 card_declined"
+    },
+    {
+      "delay_seconds": 0,
+      "event_type": "payment.failed",
+      "external_event_id": "sim_evt_S04_42_000003",
+      "is_delayed": false,
+      "is_duplicate": false,
+      "is_out_of_order": false,
+      "occurred_at": "2026-01-01T00:00:33Z",
+      "order_ref": "sim_order_42_1",
+      "received_at": "2026-01-01T00:00:34Z",
+      "sequence": 3,
+      "summary": "Payment failed \u2014 card_declined"
+    },
+    {
+      "delay_seconds": 0,
+      "event_type": "payment.attempted",
+      "external_event_id": "sim_evt_S04_42_000004",
+      "is_delayed": false,
+      "is_duplicate": false,
+      "is_out_of_order": false,
+      "occurred_at": "2026-01-01T00:04:34Z",
+      "order_ref": "sim_order_42_1",
+      "received_at": "2026-01-01T00:04:36Z",
+      "sequence": 4,
+      "summary": "Payment attempted \u2014 card_declined"
+    },
+    {
+      "delay_seconds": 0,
+      "event_type": "payment.failed",
+      "external_event_id": "sim_evt_S04_42_000005",
+      "is_delayed": false,
+      "is_duplicate": false,
+      "is_out_of_order": false,
+      "occurred_at": "2026-01-01T00:04:37Z",
+      "order_ref": "sim_order_42_1",
+      "received_at": "2026-01-01T00:04:42Z",
+      "sequence": 5,
+      "summary": "Payment failed \u2014 card_declined"
+    },
+    {
+      "delay_seconds": 0,
+      "event_type": "payment.attempted",
+      "external_event_id": "sim_evt_S04_42_000006",
+      "is_delayed": false,
+      "is_duplicate": false,
+      "is_out_of_order": false,
+      "occurred_at": "2026-01-01T00:06:36Z",
+      "order_ref": "sim_order_42_1",
+      "received_at": "2026-01-01T00:06:37Z",
+      "sequence": 6,
+      "summary": "Payment attempted \u2014 card_declined"
+    },
+    {
+      "delay_seconds": 0,
+      "event_type": "payment.failed",
+      "external_event_id": "sim_evt_S04_42_000007",
+      "is_delayed": false,
+      "is_duplicate": false,
+      "is_out_of_order": false,
+      "occurred_at": "2026-01-01T00:06:39Z",
+      "order_ref": "sim_order_42_1",
+      "received_at": "2026-01-01T00:06:41Z",
+      "sequence": 7,
+      "summary": "Payment failed \u2014 card_declined"
+    }
+  ]
+}

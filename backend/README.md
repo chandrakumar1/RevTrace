@@ -75,6 +75,11 @@ domain objects.
 clock-dependence that tests can't control. Every scoring formula is documented
 and unit-tested.
 
+**The simulator is a consumer, never a dependency.** `simulator/` may import
+`app.models.enums` and `app.core.money`; `app/` must never import `simulator`.
+A test enforces the direction. Simulated data reaches the database only through
+the ingestion layer, never by direct write.
+
 ## Testing
 
 ```bash

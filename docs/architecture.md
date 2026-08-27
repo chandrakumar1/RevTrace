@@ -129,9 +129,61 @@ they hold regardless of what any caller, including a future agent, attempts:
 math beyond `app/core/money.py`, which is deterministic, network-free, and
 LLM-free by construction.
 
+## Simulator (Phase 2)
+
+Deterministic synthetic event generator at `simulator/`, installed editable into
+the backend venv. Zero third-party dependencies; standard library only.
+
+```
+scenario definition
+      ↓
+DeterministicRng ── derive("entities"/"timing"/"amounts"/"delivery")
+      ↓
+SimulationClock (fixed epoch + integer offsets, UTC only)
+      ↓
+entity generation      merchants → customers → orders → payment_attempts
+      ↓
+canonical event generation   (causally ordered by occurred_at)
+      ↓
+delivery transform layer     duplicate / delay / reorder / drop
+      ↓
+SimulationResult (in-memory)
+      ↓
+   ┌──┴────────────────────────┐
+   ↓                           ↓
+fixture.json               [Phase 3] ingestion → PostgreSQL
+events.jsonl
+frontend.json
+```
+
+**Generation is separate from persistence** ([ADR 0004](decisions/0004-simulator-emits-event-stream-not-database-writes.md)).
+`simulate(scenario, seed=...)` is pure — no database, no network, no filesystem.
+The simulator never writes to `revtrace_dev`; the Phase 3 ingestion layer does.
+
+**Causal order and delivery order are separate.** The delivery transform layer
+corrupts arrival without touching `occurred_at`, which is what makes "the
+timeline reconstructs correctly despite pathological delivery" testable.
+
+**Duplicates are emitted, not deduplicated.** Suppression is the job of
+`UNIQUE(merchant_id, external_event_id)`. A simulator that deduplicated would
+make the duplicate-webhook scenario test nothing.
+
+**The simulator generates only merchants, customers, orders, and payment
+attempts** — never `revenue_risks`, `recovery_cases`, `recovery_actions`, or
+`audit_events` ([ADR 0005](decisions/0005-simulator-does-not-generate-recovery-or-risk-entities.md)).
+Recovery scenarios emit `recovery.*` events as historical facts; no approval,
+policy decision, or execution authorization is ever fabricated. Ground truth
+states what should be detected, never a score, confidence, or recommendation.
+
+**Ground truth lives outside event payloads**, so a detector cannot read the
+answer out of its own input. Enforced by test.
+
+17 scenarios across five categories. Fixture format documented in
+[docs/contracts/simulation-fixture.md](contracts/simulation-fixture.md).
+
 ## Sections to be written
 
-- [ ] Simulator design and scenario catalogue (Phase 2)
+- [x] Simulator design and scenario catalogue (Phase 2) — see above
 - [ ] Detection rules and thresholds (Phase 3)
 - [ ] Revenue Leak Graph construction and timeline reconstruction (Phase 4)
 - [ ] AI evidence contract and structured output schemas (Phase 5)
