@@ -1,0 +1,20 @@
+{
+  "as_of": "2026-06-01T00:00:00Z",
+  "findings": [
+    {
+      "amount_at_risk_minor": 0,
+      "confidence_bps": 7000,
+      "currency": "INR",
+      "detection_rule": "reconciliation_mismatch.v1",
+      "evidence_event_ids": [
+        "sim_evt_S10_42_000003",
+        "sim_evt_S10_42_000004"
+      ],
+      "order_ref": "sim_order_42_1",
+      "reason": "Payment captured (230400 minor units) but order.paid never arrived; order still in state 'attempted' after 13046360 seconds. No revenue is at risk \u2014 the funds were collected \u2014 but the order has not reconciled.",
+      "risk_type": "reconciliation_mismatch"
+    }
+  ],
+  "scenario_id": "S10",
+  "seed": 42
+}

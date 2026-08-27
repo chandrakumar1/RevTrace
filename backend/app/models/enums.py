@@ -72,12 +72,22 @@ class EventType(_RevTraceEnum):
 
 
 class RiskType(_RevTraceEnum):
-    """The four scenarios named in the specification."""
+    """Revenue-risk classifications.
+
+    The first four are the scenarios named in the specification. The vocabulary
+    is additive: values are added when a detector needs one, which is exactly
+    the growth path ADR 0003 chose VARCHAR + CHECK over a native ENUM for.
+    """
 
     REPEATED_PAYMENT_FAILURE = "repeated_payment_failure"  # Scenario A
     CHECKOUT_ABANDONMENT = "checkout_abandonment"  # Scenario B
     SUBSCRIPTION_PAYMENT_FAILURE = "subscription_payment_failure"  # Scenario C
     PAYMENT_DEGRADATION = "payment_degradation"  # Scenario D
+
+    #: Phase 3. Money was captured but the order never reconciled to paid.
+    #: An integrity anomaly rather than lost revenue, so its amount_at_risk is
+    #: always 0 — the captured funds did arrive. See ADR 0007.
+    RECONCILIATION_MISMATCH = "reconciliation_mismatch"
 
 
 class RiskStatus(_RevTraceEnum):

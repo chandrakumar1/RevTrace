@@ -1,0 +1,23 @@
+{
+  "as_of": "2026-06-01T00:00:00Z",
+  "findings": [
+    {
+      "amount_at_risk_minor": 230400,
+      "confidence_bps": 6250,
+      "currency": "INR",
+      "detection_rule": "repeated_payment_failure.v1",
+      "evidence_event_ids": [
+        "sim_evt_S12b_42_000002",
+        "sim_evt_S12b_42_000003",
+        "sim_evt_S12b_42_000005",
+        "sim_evt_S12b_42_000006",
+        "sim_evt_S12b_42_000007"
+      ],
+      "order_ref": "sim_order_42_1",
+      "reason": "3 failed payment attempts with no successful payment; failure_code=card_declined; 1 attempt event(s) never delivered and were inferred from later evidence",
+      "risk_type": "repeated_payment_failure"
+    }
+  ],
+  "scenario_id": "S12b",
+  "seed": 42
+}

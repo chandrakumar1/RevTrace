@@ -1,0 +1,21 @@
+{
+  "as_of": "2026-06-01T00:00:00Z",
+  "findings": [
+    {
+      "amount_at_risk_minor": 230400,
+      "confidence_bps": 7500,
+      "currency": "INR",
+      "detection_rule": "checkout_abandonment.v1",
+      "evidence_event_ids": [
+        "sim_evt_S05_42_000001",
+        "sim_evt_S05_42_000002",
+        "sim_evt_S05_42_000003"
+      ],
+      "order_ref": "sim_order_42_1",
+      "reason": "Checkout started and abandoned with no payment attempt.",
+      "risk_type": "checkout_abandonment"
+    }
+  ],
+  "scenario_id": "S05",
+  "seed": 42
+}

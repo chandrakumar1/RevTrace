@@ -39,6 +39,9 @@ What else was on the table and why it lost.
 | [0003](0003-status-columns-as-varchar-with-check-constraints.md) | Status columns as VARCHAR with CHECK constraints | Accepted | 1 |
 | [0004](0004-simulator-emits-event-stream-not-database-writes.md) | The simulator emits an event stream, not database writes | Accepted | 2 |
 | [0005](0005-simulator-does-not-generate-recovery-or-risk-entities.md) | The simulator generates no risk or recovery entities | Accepted | 2 |
+| [0006](0006-ingestion-accepts-entities-and-events.md) | Ingestion accepts entities and events together | Accepted | 3 |
+| [0007](0007-reconciliation-mismatch-risk-type.md) | `reconciliation_mismatch`, with zero amount at risk | Accepted | 3 |
+| [0008](0008-evidence-is-derived-not-stored.md) | Evidence is derived at read time, not stored on the risk | Accepted | 3 |
 
 Phase 0's decisions are recorded in
 [../phase-0-environment.md](../phase-0-environment.md) §7 rather than as

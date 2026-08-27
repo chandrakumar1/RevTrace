@@ -45,6 +45,10 @@ include = ["app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+# Integration tests run against revtrace_test only, never revtrace_dev.
+markers = [
+    "db: requires the revtrace_test PostgreSQL database; skipped when unreachable",
+]
 
 [tool.ruff]
 target-version = "py313"

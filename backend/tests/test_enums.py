@@ -86,13 +86,18 @@ def test_check_constraint_matches_enum(table_name: str, column_name: str, enum_c
 
 
 def test_all_four_specification_scenarios_present() -> None:
-    """Scenarios A-D from the specification."""
-    assert set(RiskType.values()) == {
+    """Scenarios A-D from the specification must always exist.
+
+    Presence, not exact equality: the vocabulary is deliberately additive, so
+    this guards that the four specification scenarios survive without
+    forbidding a later detector from adding its own value.
+    """
+    assert {
         "repeated_payment_failure",  # A
         "checkout_abandonment",  # B
         "subscription_payment_failure",  # C
         "payment_degradation",  # D
-    }
+    } <= set(RiskType.values())
 
 
 def test_ai_agent_is_not_an_execution_authorized_actor() -> None:

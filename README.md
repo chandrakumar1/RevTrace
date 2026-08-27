@@ -12,12 +12,27 @@ covers local setup only.
 
 ## Status
 
-**Phase 0 complete — repository scaffolding only.**
+**Phase 3 complete — deterministic revenue-risk detection.**
 
-No application code, no installed dependencies, no database. Directories are
-placeholders awaiting their milestone. See
-[docs/phase-0-environment.md](docs/phase-0-environment.md) for the environment
-inspection this scaffold was built against.
+The backend ingests an event stream, reconstructs order and subscription
+timelines that survive duplicate, delayed, out-of-order, and missing delivery,
+computes money and confidence deterministically, runs four detectors, resolves
+risks that stop being real, and serves it all over six versioned API endpoints.
+
+No AI yet, no Razorpay integration yet, no recovery execution, and no frontend
+dashboard. See [docs/architecture.md](docs/architecture.md) for what was
+actually built and [docs/contracts/detection-api.md](docs/contracts/detection-api.md)
+for the API contract.
+
+> **The API is unauthenticated and must not be exposed.** No key, no token, no
+> tenant isolation. Bind to localhost only. Authentication was outside the
+> approved Phase 3 scope and is a prerequisite for any deployment beyond a local
+> demo.
+
+Measured on the 17 synthetic scenarios at `seed=42`: 10 true positives, 0 false
+positives, 0 false negatives. **Synthetic/demo measurement over generated data**
+— not a held-out set, and not evidence of real-world accuracy. Phase 11 builds
+the held-out benchmark.
 
 ## Architecture rule (non-negotiable)
 
@@ -56,7 +71,8 @@ Docker is not installed and is not required.
 .
 ├── CLAUDE.md              Master engineering specification
 ├── .env.example           Environment variable template (no values)
-├── docs/                  Environment report, architecture notes, ADRs
+├── docs/                  Environment report, architecture notes, ADRs,
+│                          API and fixture contracts
 ├── backend/               Python 3.13 / FastAPI modular monolith
 │   ├── app/
 │   │   ├── api/           Routes, dependencies, router wiring
@@ -79,9 +95,6 @@ Docker is not installed and is not required.
 
 ## Setup
 
-Phase 0 does not install anything. The steps below are the **Phase 1** plan,
-recorded here so setup is reproducible; do not run them until Phase 1 begins.
-
 ```bash
 # 1. Secrets (never committed)
 cp .env.example .env
@@ -93,12 +106,30 @@ python3.13 -m venv .venv
 source .venv/bin/activate
 python -V                      # expect 3.13.x
 
-# 3. Dependencies (Phase 1)
+# 3. Dependencies
 pip install -e ".[dev]"
+pip install -e ../simulator
 
-# 4. Database (Phase 1)
+# 4. Databases
 createdb revtrace_dev
+createdb revtrace_test         # integration and API tests only
+.venv/bin/alembic upgrade head
+
+# 5. Run
+.venv/bin/uvicorn app.main:app --reload    # http://127.0.0.1:8000/docs
 ```
+
+Load a scenario and detect against it:
+
+```bash
+.venv/bin/python -m simulator generate S04 --seed 42
+# POST simulator/output/S04_seed42/fixture.json (minus ground_truth)
+#   to /api/v1/ingest/simulation, then POST /api/v1/detection/runs
+```
+
+`revtrace_dev` is the development database and is never used by tests.
+`revtrace_test` is the only database the test suite touches, and every test runs
+in a transaction that is rolled back.
 
 ## Milestones
 
@@ -107,8 +138,8 @@ createdb revtrace_dev
 | 0 | Repository and development environment inspection | ✅ Complete |
 | 1 | Backend foundation and database | ✅ Complete |
 | 2 | Synthetic event simulator | ✅ Complete |
-| 3 | Deterministic revenue-risk detection | Not started |
-| 4 | Revenue Leak Graph and timelines | Not started |
+| 3 | Deterministic revenue-risk detection | ✅ Complete |
+| 4 | Revenue Leak Graph and timelines | Partly done in Phase 3 — per-order timelines built; graph outstanding |
 | 5 | AI diagnosis | Not started |
 | 6 | Counterfactual recovery engine | Not started |
 | 7 | Policy and safety engine | Not started |
@@ -121,6 +152,13 @@ createdb revtrace_dev
 
 ## Security
 
+- **The API is unauthenticated as of Phase 3.** No key, no token, no session, no
+  per-merchant authorization. Localhost only; authentication is a prerequisite
+  for any deployment. It is a documented gap, not an oversight — see the
+  [API contract](docs/contracts/detection-api.md#security-posture).
+- No endpoint moves money. Nothing approves, executes, refunds, retries,
+  contacts a customer, or calls Razorpay. Detection writes to `revenue_risks`
+  and nothing else, verified by test.
 - Razorpay runs in **Test Mode** only.
 - Secrets live in `.env` (gitignored). Only `.env.example` is tracked.
 - No Razorpay secret is ever exposed to the frontend.

@@ -1,0 +1,21 @@
+{
+  "as_of": "2026-06-01T00:00:00Z",
+  "findings": [
+    {
+      "amount_at_risk_minor": 349600,
+      "confidence_bps": 7500,
+      "currency": "INR",
+      "detection_rule": "subscription_payment_failure.v1",
+      "evidence_event_ids": [
+        "sim_evt_S06_42_000003",
+        "sim_evt_S06_42_000004",
+        "sim_evt_S06_42_000005"
+      ],
+      "order_ref": "sim_sub_42_1",
+      "reason": "2 consecutive failed billing cycles with no subsequent successful charge; subscription halted",
+      "risk_type": "subscription_payment_failure"
+    }
+  ],
+  "scenario_id": "S06",
+  "seed": 42
+}
