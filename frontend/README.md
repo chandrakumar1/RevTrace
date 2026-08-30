@@ -2,9 +2,66 @@
 
 React · Vite · TypeScript · Tailwind CSS · Recharts
 
-**Status: not yet scaffolded.** No `package.json`, nothing installed. The app
-itself is built in **Phase 10** — but the data contract it consumes is settled
-now, so components can be written against real fixtures immediately.
+**Status: scaffolded, dependencies not installed.** The Vite + React +
+TypeScript + Tailwind v4 skeleton is in place and reads committed fixtures. The
+dashboard views are still to come; `App.tsx` is a fixture picker and a raw
+shell, nothing more.
+
+## Local development
+
+```sh
+cd frontend
+npm install     # required once — nothing is installed yet
+npm run dev     # Vite dev server
+npm run build   # tsc -b && vite build
+npm run typecheck
+```
+
+Node 24.19.0 and npm 11.17.0 are the versions this was written against. **npm
+is the package manager** — pnpm, yarn and bun are not installed and are not
+being added.
+
+Tailwind v4 is configured through `@tailwindcss/vite` and a CSS-first
+`@import "tailwindcss"` in `src/index.css`. That is why there is deliberately no
+`tailwind.config.js` and no `postcss.config.js`.
+
+`@/` resolves to `src/`, in both `vite.config.ts` and `tsconfig.app.json`.
+
+## Evaluation report fixtures
+
+`src/fixtures/` holds four backend-generated reports, verified during the Day 5
+closeout. **Do not hand-edit them** — regenerate from the backend, or they stop
+being evidence of anything.
+
+| Fixture | What it exercises |
+|---|---|
+| `report.10k.json` | The accepted N=10,000 run. Byte-identical to `docs/evaluation.json`. |
+| `report.underpowered.json` | `is_underpowered = true` (298 per arm against a planned 384). |
+| `report.qini_undefined.json` | `Q(N) = 0`, so the Qini coefficient is `null` — undefined, not zero. |
+| `report.empty.json` | No sealed outcomes, so the backend refuses to estimate. |
+
+`report.empty.json` has a **different shape** from the other three: there is no
+report, only the refusal. The payload is a discriminated union on `available`,
+and `isAvailable()` in `src/types/report.ts` is the narrowing helper. Branch
+before reading any report field.
+
+Two conventions run through the payload. Rates and effects are **integer basis
+points** out of 10,000 (`1564` is 15.64%), and money is an **integer count of
+minor units** (`447880605` is ₹4,478,806.05). `src/lib/format.ts` turns both
+into strings by slicing the decimal representation, never by dividing — no
+float touches a money or probability path, on either side of the wire.
+
+`null` is never interchangeable with `0`. An undefined Qini coefficient means
+there was no incremental recovery to apportion, which is a different statement
+from a ranking that did no better than chance.
+
+**No API layer exists yet.** The app reads these files at build time. No backend
+endpoint has been agreed, and none is invented here.
+
+## Phase 2 simulator contract
+
+The app itself is built in **Phase 10** — but the simulator data contract was
+settled in Phase 2, so components can be written against real fixtures.
 
 ## Build against this now
 

@@ -1,0 +1,24 @@
+{
+  "available": false,
+  "enrolled": 40,
+  "experiment": {
+    "alpha_bps": 500,
+    "holdout_bps": 5000,
+    "hypothesis": "Creating a payment link on a repeated payment failure increases the probability of payment within 72 hours, relative to an untreated holdout.",
+    "id": "549bda1d-e47f-515d-9b29-423903028298",
+    "mde_bps": 1000,
+    "name": "BENCH-seed3-n40",
+    "planned_n_per_arm": 384,
+    "power_bps": 8000,
+    "primary_metric": "recovery_rate"
+  },
+  "label": "SYNTHETIC / DEMO EVALUATION",
+  "refusal": {
+    "experiment_id": "549bda1d-e47f-515d-9b29-423903028298",
+    "message": "40 of 40 outcomes are not sealed (for example 04256f89-ff23-49f4-9491-659362aa530e, 05d54917-2f73-4c46-a4d5-8ada87a83442, 15e3d921-44b2-45bd-b5b0-532903cd0451, ...). Analysing a partial population would measure units that resolved quickly rather than a random sample of units. Seal every window first.",
+    "missing_outcomes": 0,
+    "unsealed_outcomes": 40
+  },
+  "sealed_outcomes": 0,
+  "uplift": null
+}

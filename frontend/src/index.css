@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Tailwind v4 is configured here rather than in a JS file. Names declared in
+   @theme become utilities — `--color-incremental` gives `bg-incremental`,
+   `text-incremental`, and so on. */
+@theme {
+  --color-ink: oklch(0.22 0.01 260);
+  --color-muted: oklch(0.52 0.01 260);
+  --color-faint: oklch(0.68 0.008 260);
+  --color-line: oklch(0.9 0.005 260);
+  --color-surface: oklch(0.99 0.002 260);
+  --color-card: oklch(1 0 0);
+  --color-synthetic: oklch(0.62 0.16 55);
+
+  /* The ledger's three quantities. Incremental is the only one the system can
+     claim to have caused, so it is the only one given a confident colour;
+     credited-not-earned is deliberately drab, because it is the part a naive
+     dashboard would have taken credit for. */
+  --color-gross: oklch(0.55 0.03 260);
+  --color-credited: oklch(0.72 0.09 65);
+  --color-incremental: oklch(0.55 0.13 165);
+
+  /* Quadrants. Only PERSUADABLE means act, so it is the only confident colour;
+     SLEEPING_DOG is a warning because acting there destroys value, and the
+     rest are deliberately quiet. */
+  --color-danger: oklch(0.55 0.17 25);
+  --color-neutral: oklch(0.7 0.02 260);
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Figures line up in columns when they are tabular. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}

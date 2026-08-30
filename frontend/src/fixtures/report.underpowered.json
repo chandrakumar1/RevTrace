@@ -1,0 +1,557 @@
+{
+  "accuracy": {
+    "error_bps": -246,
+    "estimated_ate_bps": 1404,
+    "interval_covers_the_truth": true,
+    "true_ate_bps": 1650
+  },
+  "balance": {
+    "covariates": [
+      {
+        "kind": "categorical",
+        "levels": [
+          {
+            "holdout_count": 298,
+            "level": "repeated_payment_failure",
+            "smd_bps": 0,
+            "treatment_count": 302,
+            "undefined_reason": null
+          }
+        ],
+        "name": "risk_type",
+        "smd_bps": null,
+        "undefined_reason": null
+      },
+      {
+        "kind": "categorical",
+        "levels": [
+          {
+            "holdout_count": 69,
+            "level": "2000-5000",
+            "smd_bps": -1839,
+            "treatment_count": 48,
+            "undefined_reason": null
+          },
+          {
+            "holdout_count": 89,
+            "level": "500-2000",
+            "smd_bps": 1466,
+            "treatment_count": 111,
+            "undefined_reason": null
+          },
+          {
+            "holdout_count": 30,
+            "level": "5000-15000",
+            "smd_bps": 794,
+            "treatment_count": 38,
+            "undefined_reason": null
+          },
+          {
+            "holdout_count": 87,
+            "level": "<500",
+            "smd_bps": -380,
+            "treatment_count": 83,
+            "undefined_reason": null
+          },
+          {
+            "holdout_count": 23,
+            "level": ">15000",
+            "smd_bps": -165,
+            "treatment_count": 22,
+            "undefined_reason": null
+          }
+        ],
+        "name": "amount_band",
+        "smd_bps": null,
+        "undefined_reason": null
+      },
+      {
+        "kind": "continuous",
+        "levels": [],
+        "name": "amount_at_risk",
+        "smd_bps": 168,
+        "undefined_reason": null
+      },
+      {
+        "kind": "continuous",
+        "levels": [],
+        "name": "confidence_bps",
+        "smd_bps": 0,
+        "undefined_reason": null
+      },
+      {
+        "kind": "categorical",
+        "levels": [
+          {
+            "holdout_count": 131,
+            "level": "card",
+            "smd_bps": -318,
+            "treatment_count": 128,
+            "undefined_reason": null
+          },
+          {
+            "holdout_count": 56,
+            "level": "netbanking",
+            "smd_bps": 519,
+            "treatment_count": 63,
+            "undefined_reason": null
+          },
+          {
+            "holdout_count": 111,
+            "level": "upi",
+            "smd_bps": -102,
+            "treatment_count": 111,
+            "undefined_reason": null
+          }
+        ],
+        "name": "payment_method",
+        "smd_bps": null,
+        "undefined_reason": null
+      }
+    ],
+    "experiment_id": "50048d09-202e-5ac1-bd50-595eff1a13dd",
+    "flagged": [
+      "amount_band"
+    ],
+    "holdout_n": 298,
+    "is_balanced": false,
+    "threshold_bps": 1000,
+    "treatment_n": 302
+  },
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 20260830
+  },
+  "deferred": [
+    {
+      "reason": "the detection benchmark harness lives in the test tree, and the application may not import from it; promoting it is scheduled separately",
+      "section": "Detection precision and recall"
+    },
+    {
+      "reason": "requires a gross margin and an average customer lifetime value. Neither exists anywhere in this codebase, and inventing either would put a made-up number into a money figure",
+      "section": "Net incremental value P&L"
+    },
+    {
+      "reason": "same missing inputs as the P&L. The harm *effect* is reported below with an interval; only its conversion into money is deferred",
+      "section": "Harm cost"
+    },
+    {
+      "reason": "requires the provider adapter and webhook verification, which are a later phase",
+      "section": "Failure scenarios and observed behaviour"
+    }
+  ],
+  "experiment": {
+    "alpha_bps": 500,
+    "holdout_bps": 5000,
+    "hypothesis": "Creating a payment link on a repeated payment failure increases the probability of payment within 72 hours, relative to an untreated holdout.",
+    "id": "50048d09-202e-5ac1-bd50-595eff1a13dd",
+    "locked_at": "2026-01-01T03:30:00+05:30",
+    "mde_bps": 1000,
+    "name": "BENCH-seed7-n600",
+    "planned_n_per_arm": 384,
+    "power_bps": 8000,
+    "primary_metric": "recovery_rate",
+    "started_at": "2026-01-01T04:30:00+05:30"
+  },
+  "ground_truth": {
+    "harm0_rate_bps": 33,
+    "harm1_rate_bps": 383,
+    "n": 600,
+    "self_recovery_share_bps": 4000,
+    "true_ate_bps": 1650,
+    "true_harm_ate_bps": 350,
+    "y0_rate_bps": 4000,
+    "y1_rate_bps": 5650
+  },
+  "ground_truth_by_stratum": [
+    {
+      "label": "expired_or_blocked_card",
+      "n": 100,
+      "true_ate_bps": 6000,
+      "true_harm_ate_bps": 200
+    },
+    {
+      "label": "high_value_customer",
+      "n": 24,
+      "true_ate_bps": 2917,
+      "true_harm_ate_bps": 417
+    },
+    {
+      "label": "insufficient_funds_salary_cycle",
+      "n": 118,
+      "true_ate_bps": 1864,
+      "true_harm_ate_bps": 254
+    },
+    {
+      "label": "intentional_churner",
+      "n": 43,
+      "true_ate_bps": -465,
+      "true_harm_ate_bps": 465
+    },
+    {
+      "label": "issuer_downtime",
+      "n": 64,
+      "true_ate_bps": 156,
+      "true_harm_ate_bps": 313
+    },
+    {
+      "label": "low_engagement_mandate_holder",
+      "n": 91,
+      "true_ate_bps": 769,
+      "true_harm_ate_bps": 1099
+    },
+    {
+      "label": "transient_upi_timeout",
+      "n": 160,
+      "true_ate_bps": 250,
+      "true_harm_ate_bps": 63
+    }
+  ],
+  "harm": {
+    "ate_bps": 430,
+    "ate_ci_high_bps": 694,
+    "ate_ci_low_bps": 198,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260830,
+    "n_holdout": 298,
+    "n_treatment": 302,
+    "p_value_micros": 743,
+    "rate_holdout_bps": 34,
+    "rate_treatment_bps": 464
+  },
+  "label": "SYNTHETIC / DEMO EVALUATION",
+  "ledger": {
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260830,
+    "credited_not_earned": 56066573,
+    "credited_share_bps": 7941,
+    "gross_recovered": 70601131,
+    "incremental_ci_high": 43876783,
+    "incremental_ci_low": -15609328,
+    "incremental_recovered": 14534558,
+    "mean_holdout": 185651,
+    "mean_treatment": 233779,
+    "n_holdout": 298,
+    "n_treatment": 302
+  },
+  "limitations": [
+    "All results are synthetic. The planted parameters are assumptions someone wrote down, not measurements.",
+    "The effects are planted, so recovering them validates the estimator, not the world.",
+    "Real customer response to a nudge is unobservable in a test environment.",
+    "The comparison against the true effect is only possible because the true effect was written by hand. No production system can produce this section.",
+    "A production holdout costs real money. The sizing calculator quantifies that trade-off; it does not remove it.",
+    "Interval calibration was checked on 20 independently seeded populations of 2,000 and the true effect fell inside the 95% interval every time. That is no evidence of under-coverage; it is not a demonstration of exact calibration. Twenty trials cannot separate 95% from 99% \u2014 under a true 95% rate, a clean sweep is the single most likely outcome (p = 0.36), and the one-sided lower bound on true coverage is only 86%. Reporting it as '100% calibrated' would overstate what was measured.",
+    "The generator's observable signal was deliberately strengthened after two planted strata proved indistinguishable from the features being persisted: `failure_code` is now written with 70% characteristic / 30% off-characteristic noise. The model was never changed to fit the data, but the data was made learnable, and a real payment stream carries whatever signal it carries."
+  ],
+  "per_protocol": {
+    "excluded_total": 0,
+    "non_compliance_bps": 0,
+    "recovery": {
+      "ate_bps": 1404,
+      "ate_ci_high_bps": 2175,
+      "ate_ci_low_bps": 607,
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 20260830,
+      "n_holdout": 298,
+      "n_treatment": 302,
+      "p_value_micros": 570,
+      "rate_holdout_bps": 3993,
+      "rate_treatment_bps": 5397
+    }
+  },
+  "power": {
+    "achieved_n_per_arm": 298,
+    "ci_width_bps": 1568,
+    "detectable_mde_bps": 1136,
+    "is_underpowered": true,
+    "planned_n_per_arm": 384,
+    "required_n_per_arm": 385
+  },
+  "recovery": {
+    "ate_bps": 1404,
+    "ate_ci_high_bps": 2175,
+    "ate_ci_low_bps": 607,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260830,
+    "n_holdout": 298,
+    "n_treatment": 302,
+    "p_value_micros": 570,
+    "rate_holdout_bps": 3993,
+    "rate_treatment_bps": 5397
+  },
+  "uplift": {
+    "acceptance": {
+      "accepted": false,
+      "criteria": [
+        {
+          "expected": "sleeping_dog",
+          "name": "low_engagement_mandate_holder is modally a sleeping dog",
+          "observed": "gray_zone",
+          "passed": false
+        },
+        {
+          "expected": "anything but persuadable",
+          "name": "transient_upi_timeout is not modally persuadable",
+          "observed": "gray_zone",
+          "passed": true
+        },
+        {
+          "expected": "strictly lower",
+          "name": "mean uplift ranks transient_upi_timeout below insufficient_funds_salary_cycle",
+          "observed": "1401 bps vs 1419 bps",
+          "passed": true
+        }
+      ]
+    },
+    "confusion_matrix": {
+      "empty_quadrants": [
+        "persuadable",
+        "sure_thing",
+        "lost_cause",
+        "sleeping_dog"
+      ],
+      "quadrants": [
+        "persuadable",
+        "sure_thing",
+        "lost_cause",
+        "sleeping_dog",
+        "gray_zone"
+      ],
+      "strata": [
+        {
+          "counts": {
+            "gray_zone": 100,
+            "lost_cause": 0,
+            "persuadable": 0,
+            "sleeping_dog": 0,
+            "sure_thing": 0
+          },
+          "label": "expired_or_blocked_card",
+          "mean_harm_uplift_bps": 433,
+          "mean_uplift_bps": 1380,
+          "modal_quadrant": "gray_zone",
+          "n": 100
+        },
+        {
+          "counts": {
+            "gray_zone": 24,
+            "lost_cause": 0,
+            "persuadable": 0,
+            "sleeping_dog": 0,
+            "sure_thing": 0
+          },
+          "label": "high_value_customer",
+          "mean_harm_uplift_bps": 453,
+          "mean_uplift_bps": 1383,
+          "modal_quadrant": "gray_zone",
+          "n": 24
+        },
+        {
+          "counts": {
+            "gray_zone": 118,
+            "lost_cause": 0,
+            "persuadable": 0,
+            "sleeping_dog": 0,
+            "sure_thing": 0
+          },
+          "label": "insufficient_funds_salary_cycle",
+          "mean_harm_uplift_bps": 427,
+          "mean_uplift_bps": 1419,
+          "modal_quadrant": "gray_zone",
+          "n": 118
+        },
+        {
+          "counts": {
+            "gray_zone": 43,
+            "lost_cause": 0,
+            "persuadable": 0,
+            "sleeping_dog": 0,
+            "sure_thing": 0
+          },
+          "label": "intentional_churner",
+          "mean_harm_uplift_bps": 449,
+          "mean_uplift_bps": 1361,
+          "modal_quadrant": "gray_zone",
+          "n": 43
+        },
+        {
+          "counts": {
+            "gray_zone": 64,
+            "lost_cause": 0,
+            "persuadable": 0,
+            "sleeping_dog": 0,
+            "sure_thing": 0
+          },
+          "label": "issuer_downtime",
+          "mean_harm_uplift_bps": 448,
+          "mean_uplift_bps": 1347,
+          "modal_quadrant": "gray_zone",
+          "n": 64
+        },
+        {
+          "counts": {
+            "gray_zone": 91,
+            "lost_cause": 0,
+            "persuadable": 0,
+            "sleeping_dog": 0,
+            "sure_thing": 0
+          },
+          "label": "low_engagement_mandate_holder",
+          "mean_harm_uplift_bps": 426,
+          "mean_uplift_bps": 1425,
+          "modal_quadrant": "gray_zone",
+          "n": 91
+        },
+        {
+          "counts": {
+            "gray_zone": 160,
+            "lost_cause": 0,
+            "persuadable": 0,
+            "sleeping_dog": 0,
+            "sure_thing": 0
+          },
+          "label": "transient_upi_timeout",
+          "mean_harm_uplift_bps": 428,
+          "mean_uplift_bps": 1401,
+          "modal_quadrant": "gray_zone",
+          "n": 160
+        }
+      ]
+    },
+    "fold_thresholds": [
+      {
+        "fold": 0,
+        "harm_threshold_bps": 730,
+        "high_tertile_bps": 0,
+        "low_tertile_bps": 0,
+        "qualifying_units": 0,
+        "self_recovery_ceiling_bps": 4139,
+        "training_size": 477
+      },
+      {
+        "fold": 1,
+        "harm_threshold_bps": 820,
+        "high_tertile_bps": 0,
+        "low_tertile_bps": 0,
+        "qualifying_units": 0,
+        "self_recovery_ceiling_bps": 4059,
+        "training_size": 483
+      },
+      {
+        "fold": 2,
+        "harm_threshold_bps": 717,
+        "high_tertile_bps": 0,
+        "low_tertile_bps": 0,
+        "qualifying_units": 0,
+        "self_recovery_ceiling_bps": 3886,
+        "training_size": 466
+      },
+      {
+        "fold": 3,
+        "harm_threshold_bps": 747,
+        "high_tertile_bps": 0,
+        "low_tertile_bps": 0,
+        "qualifying_units": 0,
+        "self_recovery_ceiling_bps": 3975,
+        "training_size": 480
+      },
+      {
+        "fold": 4,
+        "harm_threshold_bps": 553,
+        "high_tertile_bps": 0,
+        "low_tertile_bps": 0,
+        "qualifying_units": 0,
+        "self_recovery_ceiling_bps": 3900,
+        "training_size": 494
+      }
+    ],
+    "gray_zone": {
+      "by_reason": {
+        "global_fallback": 600
+      },
+      "by_rule": {
+        "not_qualifying": 600
+      },
+      "total": 600
+    },
+    "harm_uplift": {
+      "above_fold_threshold": 0,
+      "max_bps": 533,
+      "mean_bps": 433,
+      "min_bps": 315,
+      "n": 600,
+      "positive": 600
+    },
+    "ladder": {
+      "by_level": {
+        "(global)": 600
+      },
+      "cells": [
+        {
+          "cell": "(global)",
+          "n": 600
+        }
+      ],
+      "distinct_cells": 1,
+      "global_fallbacks": 600
+    },
+    "limitations": [
+      "Cell-level intervals are nominal 95% and uncorrected for multiplicity. Nine cells are scored per fold and each interval is read on its own, so the chance that at least one is wrong is far above 5%. The Benjamini-Hochberg procedure exists in the estimator layer and is deliberately not applied to per-cell quadrant decisions; treat a single cell's interval as indicative, not as a test that survived correction.",
+      "Sure Thing and Lost Cause are defined as a confidence interval containing zero. At N=10,000 no cell's interval contains zero, so both quadrants come out empty \u2014 the definition asks for a null result, and a study this size resolves effects a smaller one would have missed. Distinguishing 'no effect' from 'an effect too small to be worth acting on' needs equivalence testing against a margin, which is future work. The classifier is unchanged; this is a limit of the definition, not a defect in the run.",
+      "Quadrant labels are only as sharp as the features. `intentional_churner` and `expired_or_blocked_card` share the failure code `card_declined`, and no persisted feature separates them, so the merged cell inherits the blocked-card lift and the churner is labelled Persuadable against its planted Lost Cause. This is a feature-resolution limit. It would be resolved by a feature that distinguishes the two, never by retuning the model against the answer key.",
+      "Top-share capture by unit count is not a revenue claim. The top 20% of the ranking holds 38.66% of incremental recoveries but only 26.94% of incremental rupees, so the ranking is better at finding recoveries than at finding valuable ones. Quote the amount-weighted figure whenever the claim is about money."
+    ],
+    "model": {
+      "alpha_bps": 500,
+      "folds": 5,
+      "mde_bps": 1000,
+      "n_scored": 600,
+      "resamples": 10000,
+      "seed": 20260830,
+      "version": "cellrate-1/k5/fc+pm"
+    },
+    "qini": {
+      "beats_random": false,
+      "is_defined": true,
+      "n": 600,
+      "n_holdout": 298,
+      "n_treated": 302,
+      "qini_coefficient_bps": -1625,
+      "qini_total": 42,
+      "top_capture": {
+        "capture_bps": 238,
+        "k": 120,
+        "n": 600,
+        "qini_at_k": 1,
+        "share_bps": 2000,
+        "total": 42
+      }
+    },
+    "quadrant_counts": {
+      "gray_zone": 600,
+      "lost_cause": 0,
+      "persuadable": 0,
+      "sleeping_dog": 0,
+      "sure_thing": 0
+    },
+    "rule_counts": {
+      "not_qualifying": 600
+    },
+    "top_amount_capture": {
+      "capture_bps": 3638,
+      "k": 120,
+      "n": 600,
+      "qini_at_k": 5287712,
+      "share_bps": 2000,
+      "total": 14534558
+    },
+    "top_capture": {
+      "capture_bps": 238,
+      "k": 120,
+      "n": 600,
+      "qini_at_k": 1,
+      "share_bps": 2000,
+      "total": 42
+    }
+  }
+}
