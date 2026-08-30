@@ -27,6 +27,22 @@ from simulator.models import (
     SimulationResult,
     SyntheticEvent,
 )
+
+# -- v2: potential outcomes ------------------------------------------------
+# Additive. The v1 surface above is unchanged, so every existing scenario,
+# checksum, and test keeps working exactly as before.
+from simulator.potential_outcomes import (
+    POTENTIAL_OUTCOMES_VERSION,
+    PotentialOutcomeCase,
+    PotentialOutcomeSet,
+    RevealedCase,
+    SegmentTruth,
+    generate_potential_outcomes,
+    overall_truth,
+    segment_truth,
+    self_recovery_share_bps,
+    truth_by_segment,
+)
 from simulator.rng import DeterministicRng
 from simulator.scenarios import (
     SCENARIO_REGISTRY,
@@ -35,6 +51,7 @@ from simulator.scenarios import (
     scenarios_by_category,
 )
 from simulator.scenarios.base import BuildContext
+from simulator.segments import SEGMENTS, Action, Covariates, SegmentId, SegmentSpec
 from simulator.serialization import compute_checksum
 from simulator.validation import (
     InvalidSeedError,
@@ -50,9 +67,24 @@ from simulator.version import GENERATOR_VERSION
 
 __all__ = [
     "GENERATOR_VERSION",
+    "POTENTIAL_OUTCOMES_VERSION",
     "SCENARIO_REGISTRY",
+    "SEGMENTS",
     "SIMULATION_EPOCH",
+    "Action",
+    "Covariates",
     "DeterministicRng",
+    "PotentialOutcomeCase",
+    "PotentialOutcomeSet",
+    "RevealedCase",
+    "SegmentId",
+    "SegmentSpec",
+    "SegmentTruth",
+    "generate_potential_outcomes",
+    "overall_truth",
+    "segment_truth",
+    "self_recovery_share_bps",
+    "truth_by_segment",
     "EntitySet",
     "EventDelivery",
     "GroundTruth",

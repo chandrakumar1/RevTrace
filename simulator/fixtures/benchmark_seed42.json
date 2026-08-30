@@ -1,0 +1,787 @@
+{
+  "action": "create_payment_link",
+  "case_count": 10000,
+  "checksum_sha256": "da8ba0da6903e9a4cdc7608c437a6488d7336db126251e6f36f28a0649e9b2d5",
+  "generator_version": "2.0.0",
+  "ground_truth": {
+    "by_segment": {
+      "expired_or_blocked_card": {
+        "expected_quadrant": "persuadable",
+        "harm0_rate_bps": 26,
+        "harm1_rate_bps": 104,
+        "is_sleeping_dog": false,
+        "n": 1536,
+        "true_ate_bps": 5462,
+        "true_harm_ate_bps": 78,
+        "y0_rate_bps": 495,
+        "y1_rate_bps": 5957
+      },
+      "high_value_customer": {
+        "expected_quadrant": "persuadable",
+        "harm0_rate_bps": 188,
+        "harm1_rate_bps": 169,
+        "is_sleeping_dog": false,
+        "n": 533,
+        "true_ate_bps": 2401,
+        "true_harm_ate_bps": -19,
+        "y0_rate_bps": 3002,
+        "y1_rate_bps": 5403
+      },
+      "insufficient_funds_salary_cycle": {
+        "expected_quadrant": "persuadable",
+        "harm0_rate_bps": 40,
+        "harm1_rate_bps": 125,
+        "is_sleeping_dog": false,
+        "n": 2001,
+        "true_ate_bps": 1734,
+        "true_harm_ate_bps": 85,
+        "y0_rate_bps": 1519,
+        "y1_rate_bps": 3253
+      },
+      "intentional_churner": {
+        "expected_quadrant": "lost_cause",
+        "harm0_rate_bps": 104,
+        "harm1_rate_bps": 188,
+        "is_sleeping_dog": false,
+        "n": 959,
+        "true_ate_bps": 198,
+        "true_harm_ate_bps": 84,
+        "y0_rate_bps": 219,
+        "y1_rate_bps": 417
+      },
+      "issuer_downtime": {
+        "expected_quadrant": "sure_thing",
+        "harm0_rate_bps": 58,
+        "harm1_rate_bps": 77,
+        "is_sleeping_dog": false,
+        "n": 1043,
+        "true_ate_bps": 87,
+        "true_harm_ate_bps": 19,
+        "y0_rate_bps": 4458,
+        "y1_rate_bps": 4545
+      },
+      "low_engagement_mandate_holder": {
+        "expected_quadrant": "sleeping_dog",
+        "harm0_rate_bps": 213,
+        "harm1_rate_bps": 1192,
+        "is_sleeping_dog": true,
+        "n": 1409,
+        "true_ate_bps": -64,
+        "true_harm_ate_bps": 979,
+        "y0_rate_bps": 6480,
+        "y1_rate_bps": 6416
+      },
+      "transient_upi_timeout": {
+        "expected_quadrant": "sure_thing",
+        "harm0_rate_bps": 44,
+        "harm1_rate_bps": 91,
+        "is_sleeping_dog": false,
+        "n": 2519,
+        "true_ate_bps": 302,
+        "true_harm_ate_bps": 47,
+        "y0_rate_bps": 7499,
+        "y1_rate_bps": 7801
+      }
+    },
+    "overall_true_ate_bps": 1409,
+    "overall_true_harm_ate_bps": 188,
+    "self_recovery_share_bps": 3828
+  },
+  "planted_parameters": {
+    "expired_or_blocked_card": {
+      "expected_quadrant": "persuadable",
+      "failure_code": "card_declined",
+      "preferred_method": "card",
+      "weight_bps": 1500
+    },
+    "high_value_customer": {
+      "expected_quadrant": "persuadable",
+      "failure_code": "insufficient_funds",
+      "preferred_method": "card",
+      "weight_bps": 500
+    },
+    "insufficient_funds_salary_cycle": {
+      "expected_quadrant": "persuadable",
+      "failure_code": "insufficient_funds",
+      "preferred_method": "card",
+      "weight_bps": 2000
+    },
+    "intentional_churner": {
+      "expected_quadrant": "lost_cause",
+      "failure_code": "card_declined",
+      "preferred_method": "card",
+      "weight_bps": 1000
+    },
+    "issuer_downtime": {
+      "expected_quadrant": "sure_thing",
+      "failure_code": "bank_unavailable",
+      "preferred_method": "netbanking",
+      "weight_bps": 1000
+    },
+    "low_engagement_mandate_holder": {
+      "expected_quadrant": "sleeping_dog",
+      "failure_code": "mandate_inactive",
+      "preferred_method": "upi",
+      "weight_bps": 1500
+    },
+    "transient_upi_timeout": {
+      "expected_quadrant": "sure_thing",
+      "failure_code": "gateway_timeout",
+      "preferred_method": "upi",
+      "weight_bps": 2500
+    }
+  },
+  "sample": [
+    {
+      "amount_minor": 361683,
+      "case_id": "55917817-74ad-4a02-9a9d-3aa212511ae6",
+      "covariates": {
+        "day_of_month": 8,
+        "downtime_ended": false,
+        "hour_of_day": 23,
+        "issuer": "sbi",
+        "payment_method": "netbanking",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 0,
+        "salary_window": false,
+        "tenure_days": 1132
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "issuer_downtime",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 13935,
+      "case_id": "830c042f-836b-481d-bb0e-025bf24c8cf2",
+      "covariates": {
+        "day_of_month": 29,
+        "downtime_ended": false,
+        "hour_of_day": 7,
+        "issuer": "sbi",
+        "payment_method": "upi",
+        "prior_contact_count_30d": 1,
+        "prior_recovery_count": 0,
+        "salary_window": true,
+        "tenure_days": 770
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "low_engagement_mandate_holder",
+      "y0": true,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 330630,
+      "case_id": "4e84d2ea-787a-4f68-89d3-e64d357be113",
+      "covariates": {
+        "day_of_month": 15,
+        "downtime_ended": false,
+        "hour_of_day": 21,
+        "issuer": "sbi",
+        "payment_method": "netbanking",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 3,
+        "salary_window": false,
+        "tenure_days": 983
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": true
+      },
+      "segment_id": "issuer_downtime",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 24470,
+      "case_id": "bec61fe1-e8b5-45c6-82e2-a75db7bf28cb",
+      "covariates": {
+        "day_of_month": 3,
+        "downtime_ended": false,
+        "hour_of_day": 21,
+        "issuer": "hdfc",
+        "payment_method": "upi",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 2,
+        "salary_window": true,
+        "tenure_days": 887
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "transient_upi_timeout",
+      "y0": true,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 481520,
+      "case_id": "36a56a56-ae2d-4d9b-8c2d-7b5b648b5107",
+      "covariates": {
+        "day_of_month": 28,
+        "downtime_ended": true,
+        "hour_of_day": 3,
+        "issuer": "hdfc",
+        "payment_method": "card",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 0,
+        "salary_window": true,
+        "tenure_days": 644
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "expired_or_blocked_card",
+      "y0": false,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 969345,
+      "case_id": "6247ab05-0807-4767-8ac5-5cda10db8745",
+      "covariates": {
+        "day_of_month": 18,
+        "downtime_ended": false,
+        "hour_of_day": 10,
+        "issuer": "kotak",
+        "payment_method": "card",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 0,
+        "salary_window": false,
+        "tenure_days": 1129
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "transient_upi_timeout",
+      "y0": true,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 22811,
+      "case_id": "813ecd01-d820-4eee-b20d-6f54a3c414f2",
+      "covariates": {
+        "day_of_month": 19,
+        "downtime_ended": true,
+        "hour_of_day": 11,
+        "issuer": "axis",
+        "payment_method": "card",
+        "prior_contact_count_30d": 1,
+        "prior_recovery_count": 2,
+        "salary_window": false,
+        "tenure_days": 581
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "insufficient_funds_salary_cycle",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 189179,
+      "case_id": "ad3f8005-09a8-4e9f-b069-849cc9b4b94d",
+      "covariates": {
+        "day_of_month": 29,
+        "downtime_ended": false,
+        "hour_of_day": 14,
+        "issuer": "sbi",
+        "payment_method": "upi",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 3,
+        "salary_window": true,
+        "tenure_days": 804
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "transient_upi_timeout",
+      "y0": true,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 181267,
+      "case_id": "6e8c4e0c-96f5-4b2c-abf2-c0a4f52e8e02",
+      "covariates": {
+        "day_of_month": 9,
+        "downtime_ended": true,
+        "hour_of_day": 13,
+        "issuer": "axis",
+        "payment_method": "netbanking",
+        "prior_contact_count_30d": 1,
+        "prior_recovery_count": 1,
+        "salary_window": false,
+        "tenure_days": 1079
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "issuer_downtime",
+      "y0": true,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 28113,
+      "case_id": "fcba078c-278a-4a24-8cb7-fd999a836af4",
+      "covariates": {
+        "day_of_month": 11,
+        "downtime_ended": true,
+        "hour_of_day": 13,
+        "issuer": "kotak",
+        "payment_method": "upi",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 2,
+        "salary_window": false,
+        "tenure_days": 600
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "low_engagement_mandate_holder",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 240173,
+      "case_id": "54fdf817-37e6-4a13-a2f6-5d481aa33695",
+      "covariates": {
+        "day_of_month": 3,
+        "downtime_ended": true,
+        "hour_of_day": 1,
+        "issuer": "kotak",
+        "payment_method": "netbanking",
+        "prior_contact_count_30d": 1,
+        "prior_recovery_count": 2,
+        "salary_window": true,
+        "tenure_days": 1198
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "expired_or_blocked_card",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 406476,
+      "case_id": "f57fcde5-b72b-4c8d-a4e4-c8f91912b354",
+      "covariates": {
+        "day_of_month": 29,
+        "downtime_ended": false,
+        "hour_of_day": 23,
+        "issuer": "icici",
+        "payment_method": "card",
+        "prior_contact_count_30d": 1,
+        "prior_recovery_count": 3,
+        "salary_window": true,
+        "tenure_days": 899
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "intentional_churner",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 1449349,
+      "case_id": "0a0a9cf1-5e2b-4d18-bfc8-5caa141e189c",
+      "covariates": {
+        "day_of_month": 28,
+        "downtime_ended": false,
+        "hour_of_day": 17,
+        "issuer": "icici",
+        "payment_method": "upi",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 0,
+        "salary_window": true,
+        "tenure_days": 68
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "transient_upi_timeout",
+      "y0": false,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 781413,
+      "case_id": "75854e14-f486-48bf-a032-faa953846330",
+      "covariates": {
+        "day_of_month": 8,
+        "downtime_ended": true,
+        "hour_of_day": 23,
+        "issuer": "sbi",
+        "payment_method": "card",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 1,
+        "salary_window": false,
+        "tenure_days": 1016
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "issuer_downtime",
+      "y0": true,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 43569,
+      "case_id": "d40bfffe-c888-4c7c-bdc6-638bb904537f",
+      "covariates": {
+        "day_of_month": 29,
+        "downtime_ended": true,
+        "hour_of_day": 0,
+        "issuer": "icici",
+        "payment_method": "upi",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 1,
+        "salary_window": true,
+        "tenure_days": 1202
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "transient_upi_timeout",
+      "y0": true,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 58682,
+      "case_id": "c883f57a-bd1e-4ffb-961a-9dc17d876c51",
+      "covariates": {
+        "day_of_month": 3,
+        "downtime_ended": false,
+        "hour_of_day": 16,
+        "issuer": "kotak",
+        "payment_method": "card",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 2,
+        "salary_window": true,
+        "tenure_days": 229
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "intentional_churner",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 449204,
+      "case_id": "b12f7f18-1224-437e-92ee-2872f0520f69",
+      "covariates": {
+        "day_of_month": 6,
+        "downtime_ended": false,
+        "hour_of_day": 4,
+        "issuer": "kotak",
+        "payment_method": "card",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 3,
+        "salary_window": false,
+        "tenure_days": 1160
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "expired_or_blocked_card",
+      "y0": true,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 4854558,
+      "case_id": "eae10e4b-c96f-4d8c-9da5-c8b32d167ef1",
+      "covariates": {
+        "day_of_month": 9,
+        "downtime_ended": true,
+        "hour_of_day": 2,
+        "issuer": "kotak",
+        "payment_method": "netbanking",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 3,
+        "salary_window": false,
+        "tenure_days": 572
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "issuer_downtime",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 19128,
+      "case_id": "57084008-d358-48e6-8b54-697eda2a2ee4",
+      "covariates": {
+        "day_of_month": 20,
+        "downtime_ended": false,
+        "hour_of_day": 22,
+        "issuer": "kotak",
+        "payment_method": "upi",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 2,
+        "salary_window": false,
+        "tenure_days": 816
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "transient_upi_timeout",
+      "y0": true,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 31167,
+      "case_id": "03fc4670-d162-4245-b185-b620cf8d956f",
+      "covariates": {
+        "day_of_month": 5,
+        "downtime_ended": true,
+        "hour_of_day": 17,
+        "issuer": "icici",
+        "payment_method": "card",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 0,
+        "salary_window": true,
+        "tenure_days": 471
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "insufficient_funds_salary_cycle",
+      "y0": false,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 374413,
+      "case_id": "b0497d66-eec2-4f69-a6ce-65d31bf623e0",
+      "covariates": {
+        "day_of_month": 28,
+        "downtime_ended": true,
+        "hour_of_day": 13,
+        "issuer": "icici",
+        "payment_method": "card",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 2,
+        "salary_window": true,
+        "tenure_days": 811
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "insufficient_funds_salary_cycle",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 131428,
+      "case_id": "ec72d5f1-926e-4ee7-8d5f-f758c422ecc0",
+      "covariates": {
+        "day_of_month": 11,
+        "downtime_ended": false,
+        "hour_of_day": 22,
+        "issuer": "sbi",
+        "payment_method": "card",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 0,
+        "salary_window": false,
+        "tenure_days": 333
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "transient_upi_timeout",
+      "y0": false,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": true
+      }
+    },
+    {
+      "amount_minor": 33555,
+      "case_id": "ebac4d9d-d698-4c26-9133-988d837ad45e",
+      "covariates": {
+        "day_of_month": 29,
+        "downtime_ended": true,
+        "hour_of_day": 10,
+        "issuer": "kotak",
+        "payment_method": "upi",
+        "prior_contact_count_30d": 1,
+        "prior_recovery_count": 2,
+        "salary_window": true,
+        "tenure_days": 715
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "expired_or_blocked_card",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 454883,
+      "case_id": "13c29827-1a7e-4d17-a1ee-3a55a5a77d79",
+      "covariates": {
+        "day_of_month": 13,
+        "downtime_ended": true,
+        "hour_of_day": 4,
+        "issuer": "sbi",
+        "payment_method": "card",
+        "prior_contact_count_30d": 2,
+        "prior_recovery_count": 2,
+        "salary_window": false,
+        "tenure_days": 1343
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "intentional_churner",
+      "y0": false,
+      "y1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      }
+    },
+    {
+      "amount_minor": 771714,
+      "case_id": "b0485ead-26cb-460a-87c7-a54b944a7194",
+      "covariates": {
+        "day_of_month": 22,
+        "downtime_ended": true,
+        "hour_of_day": 1,
+        "issuer": "hdfc",
+        "payment_method": "netbanking",
+        "prior_contact_count_30d": 0,
+        "prior_recovery_count": 3,
+        "salary_window": false,
+        "tenure_days": 637
+      },
+      "harm0": false,
+      "harm1": {
+        "create_payment_link": false,
+        "retry_payment": false
+      },
+      "segment_id": "transient_upi_timeout",
+      "y0": false,
+      "y1": {
+        "create_payment_link": true,
+        "retry_payment": true
+      }
+    }
+  ],
+  "seed": 42
+}
