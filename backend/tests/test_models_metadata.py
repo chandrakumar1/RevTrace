@@ -15,6 +15,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from app.models import Base
 
 EXPECTED_TABLES = {
+    # Phase 1
     "merchants",
     "customers",
     "orders",
@@ -24,6 +25,16 @@ EXPECTED_TABLES = {
     "recovery_cases",
     "recovery_actions",
     "audit_events",
+    # Incrementality ledger (revised roadmap, Day 1). Listed explicitly rather
+    # than relaxing the assertion to a subset check: the point of this test is
+    # to catch a table added by accident, and exact equality is how it does
+    # that. Growth belongs in this list, deliberately.
+    "experiments",
+    "case_assignments",
+    "case_outcomes",
+    "uplift_scores",
+    "experiment_results",
+    "interventions",
 }
 
 #: Every column that holds money, in minor units.
@@ -37,6 +48,14 @@ MONEY_COLUMNS = {
     ("recovery_cases", "estimated_cost"),
     ("recovery_cases", "net_expected_recovery"),
     ("recovery_cases", "actual_recovery"),
+    ("case_outcomes", "recovered_amount"),
+    ("interventions", "unit_cost"),
+    ("experiment_results", "gross_recovered"),
+    ("experiment_results", "incremental_recovered"),
+    ("experiment_results", "credited_not_earned"),
+    ("experiment_results", "harm_cost"),
+    ("experiment_results", "action_cost"),
+    ("experiment_results", "net_incremental_value"),
 }
 
 JSONB_COLUMNS = {
@@ -45,10 +64,21 @@ JSONB_COLUMNS = {
     ("recovery_actions", "result"),
     ("audit_events", "input_snapshot"),
     ("audit_events", "output_snapshot"),
+    ("audit_events", "numeric_snapshot"),
+    ("experiments", "secondary_metrics"),
+    ("experiments", "strata_definition"),
 }
 
 #: Tables that are append-only and must therefore have no updated_at.
-APPEND_ONLY_TABLES = {"events", "audit_events"}
+#: An assignment that could be edited is not a randomisation, and a result that
+#: could be overwritten would let an interim reading be replaced by a better one.
+APPEND_ONLY_TABLES = {
+    "events",
+    "audit_events",
+    "case_assignments",
+    "uplift_scores",
+    "experiment_results",
+}
 
 
 def test_all_expected_tables_registered() -> None:

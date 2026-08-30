@@ -29,7 +29,14 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.enums import ExecutionStatus, PolicyStatus, RecoveryStrategy
+from app.models.enums import (
+    AbstainReason,
+    Arm,
+    CaseDecision,
+    ExecutionStatus,
+    PolicyStatus,
+    RecoveryStrategy,
+)
 from app.models.mixins import (
     TimestampMixin,
     UUIDPrimaryKeyMixin,
@@ -84,6 +91,20 @@ class RecoveryCase(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # -- incrementality ledger ----------------------------------------------
+    #: Randomised arm, denormalised from `case_assignments` for query
+    #: convenience. `case_assignments` remains the append-only record of record;
+    #: this column is a read path, not a second source of truth.
+    #: NULL means the case predates the experiment or falls outside it.
+    arm: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)
+
+    #: What the policy gate decided. `abstain` is a real outcome, not an absence
+    #: of one, and it is audited as richly as an action.
+    decision: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)
+
+    #: Why acting was declined. Required whenever `decision = 'abstain'`.
+    abstain_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
     risk: Mapped["RevenueRisk"] = relationship(back_populates="recovery_cases")
     actions: Mapped[list["RecoveryAction"]] = relationship(
         back_populates="case", cascade="all, delete-orphan"
@@ -117,4 +138,37 @@ class RecoveryCase(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="execution_requires_policy_approval",
         ),
         Index("ix_recovery_cases_policy_execution", "policy_status", "execution_status"),
+        # -- incrementality ledger ------------------------------------------
+        CheckConstraint(
+            f"arm IS NULL OR arm IN ({', '.join(repr(v) for v in Arm.values())})",
+            name="arm_valid",
+        ),
+        CheckConstraint(
+            f"decision IS NULL OR decision IN "
+            f"({', '.join(repr(v) for v in CaseDecision.values())})",
+            name="decision_valid",
+        ),
+        CheckConstraint(
+            f"abstain_reason IS NULL OR abstain_reason IN "
+            f"({', '.join(repr(v) for v in AbstainReason.values())})",
+            name="abstain_reason_valid",
+        ),
+        # An abstention without a reason is an unexplained non-action, which is
+        # exactly what this project refuses to ship. The converse is also
+        # barred: a reason may not be attached to a decision that acted.
+        CheckConstraint(
+            "decision IS DISTINCT FROM 'abstain' OR abstain_reason IS NOT NULL",
+            name="abstain_requires_reason",
+        ),
+        CheckConstraint(
+            "abstain_reason IS NULL OR decision = 'abstain'",
+            name="abstain_reason_requires_abstain",
+        ),
+        # A holdout case must never be acted on. That is the whole basis of the
+        # counterfactual, so the database refuses to store the contradiction.
+        CheckConstraint(
+            "arm IS DISTINCT FROM 'holdout' OR decision IS DISTINCT FROM 'act'",
+            name="holdout_never_acts",
+        ),
+        Index("ix_recovery_cases_arm_decision", "arm", "decision"),
     )

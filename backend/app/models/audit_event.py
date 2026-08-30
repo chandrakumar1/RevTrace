@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.enums import ActorType
+from app.models.enums import ActorType, DecisionType
 from app.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, enum_check
 
 if TYPE_CHECKING:  # runtime resolution goes through SQLAlchemy's class registry
@@ -42,6 +42,18 @@ class AuditEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         index=True,
     )
 
+    #: The risk an entry is about, when it is about a risk rather than a
+    #: recovery case. Assignment and sealing both are: they happen before any
+    #: recovery case exists, and a holdout risk never gets one at all, so
+    #: `case_id` could never identify those entries. Kept alongside `case_id`
+    #: rather than replacing it — recovery-case entries still use that.
+    risk_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("revenue_risks.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+
     actor: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     action: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -55,6 +67,17 @@ class AuditEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         Boolean, nullable=False, default=False, server_default="false"
     )
 
+    #: Which pipeline step this entry records. ABSTAIN sits alongside EXECUTE
+    #: deliberately: the audit trail must be as rich for a decision not to act
+    #: as for an action, because the non-action is the product.
+    decision_type: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)
+
+    #: The exact numbers behind the decision — uplift, confidence interval,
+    #: harm estimate, money saved. Stored so a reviewer can check the
+    #: arithmetic rather than take the outcome on trust. Redacted on the way in,
+    #: like the other snapshots.
+    numeric_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
     case: Mapped["RecoveryCase | None"] = relationship(back_populates="audit_events")
 
     __table_args__ = (
@@ -64,5 +87,26 @@ class AuditEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
             "NOT is_execution OR actor IN ('engine', 'human', 'system')",
             name="execution_actor_never_ai",
         ),
+        CheckConstraint(
+            f"decision_type IS NULL OR decision_type IN "
+            f"({', '.join(repr(v) for v in DecisionType.values())})",
+            name="decision_type_valid",
+        ),
+        # An execution entry records an action; abstaining is the opposite of
+        # one, so the pair may never appear together.
+        CheckConstraint(
+            "NOT is_execution OR decision_type IS DISTINCT FROM 'abstain'",
+            name="abstain_is_never_execution",
+        ),
+        # An abstention that recorded no numbers is an unexplained non-action.
+        CheckConstraint(
+            "decision_type IS DISTINCT FROM 'abstain' OR numeric_snapshot IS NOT NULL",
+            name="abstain_requires_numbers",
+        ),
+        # Deliberately no "must have a subject" constraint: run-level entries
+        # (a detection sweep, a sealing pass) are legitimately about neither a
+        # case nor a single risk.
         Index("ix_audit_events_case_created", "case_id", "created_at"),
+        Index("ix_audit_events_risk_created", "risk_id", "created_at"),
+        Index("ix_audit_events_decision_created", "decision_type", "created_at"),
     )

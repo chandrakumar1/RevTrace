@@ -57,6 +57,27 @@ class Settings(BaseSettings):
     # --- AI (Phase 5; empty in Phase 1) ----------------------------------
     gemini_api_key: SecretStr = SecretStr("")
 
+    # --- Experiment assignment -------------------------------------------
+    #: Decorrelates the assignment hash. Deliberately **not** a secret and
+    #: deliberately **not** generated at runtime: the arm a risk lands in must
+    #: be reproducible by an auditor from stored inputs alone.
+    #:
+    #: Changing this re-randomises every assignment in every experiment. It is a
+    #: breaking reassignment, not a tuning knob, and a running experiment's
+    #: results are void if it moves mid-flight.
+    assignment_salt: str = "revtrace-demo-salt-v1"
+
+    @field_validator("assignment_salt")
+    @classmethod
+    def _validate_assignment_salt(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError(
+                "ASSIGNMENT_SALT must not be empty: an empty salt would make the "
+                "assignment hash depend on identity alone and is almost certainly "
+                "a misconfiguration rather than a choice."
+            )
+        return v
+
     @field_validator("database_url")
     @classmethod
     def _validate_database_url(cls, v: str) -> str:

@@ -162,3 +162,117 @@ class ActorType(_RevTraceEnum):
 EXECUTION_AUTHORIZED_ACTORS: frozenset[ActorType] = frozenset(
     {ActorType.ENGINE, ActorType.HUMAN, ActorType.SYSTEM}
 )
+
+
+# -- incrementality ledger ------------------------------------------------
+#
+# Added for the revised roadmap. The vocabulary below exists so that a
+# randomised holdout, its observation window, and the decision not to act are
+# all first-class, constrained values rather than free text.
+
+
+class ExperimentStatus(_RevTraceEnum):
+    """Pre-registration lifecycle.
+
+    `LOCKED` is the pre-registration moment: after it, the hypothesis, metrics,
+    strata, holdout share, and power parameters are frozen. The point of
+    recording it is that a result nobody could have re-specified after seeing
+    the data is worth more than one that could.
+    """
+
+    DRAFT = "draft"
+    LOCKED = "locked"
+    RUNNING = "running"
+    CLOSED = "closed"
+
+
+#: The only legal forward transitions. There is deliberately no path back to
+#: DRAFT: un-locking a pre-registration would destroy the guarantee it exists
+#: to make.
+EXPERIMENT_TRANSITIONS: dict[ExperimentStatus, frozenset[ExperimentStatus]] = {
+    ExperimentStatus.DRAFT: frozenset({ExperimentStatus.LOCKED}),
+    ExperimentStatus.LOCKED: frozenset({ExperimentStatus.RUNNING, ExperimentStatus.CLOSED}),
+    ExperimentStatus.RUNNING: frozenset({ExperimentStatus.CLOSED}),
+    ExperimentStatus.CLOSED: frozenset(),
+}
+
+
+class Arm(_RevTraceEnum):
+    """Randomised assignment. Assigned once, never changed.
+
+    A case whose execution failed stays in TREATMENT — that is what
+    intention-to-treat means, and silently reclassifying it as a control would
+    inflate the measured effect.
+    """
+
+    TREATMENT = "treatment"
+    HOLDOUT = "holdout"
+
+
+class CaseDecision(_RevTraceEnum):
+    """What the policy gate decided to do about a case.
+
+    ABSTAIN is a real, audited outcome, not an absence of one.
+    """
+
+    ACT = "act"
+    ABSTAIN = "abstain"
+    ESCALATE = "escalate"
+
+
+class AbstainReason(_RevTraceEnum):
+    """Why acting was declined. Always recorded alongside the numbers."""
+
+    NEGATIVE_UPLIFT = "negative_uplift"
+    UPLIFT_NOT_SIGNIFICANT = "uplift_not_significant"
+    NEGATIVE_NET_VALUE = "negative_net_value"
+    SLEEPING_DOG = "sleeping_dog"
+    SURE_THING = "sure_thing"
+    LOST_CAUSE = "lost_cause"
+    INSUFFICIENT_SAMPLE = "insufficient_sample"
+    CONTACT_BUDGET_EXHAUSTED = "contact_budget_exhausted"
+    CUSTOMER_OPTED_OUT = "customer_opted_out"
+    REGULATORY_BLOCK = "regulatory_block"
+    HOLDOUT_ARM = "holdout_arm"
+
+
+class DecisionType(_RevTraceEnum):
+    """Which step of the pipeline an audit entry records.
+
+    ABSTAIN sits alongside EXECUTE deliberately: the audit trail must be as
+    rich for a non-action as for an action.
+    """
+
+    DETECT = "detect"
+    ASSIGN = "assign"
+    DIAGNOSE = "diagnose"
+    RECOMMEND = "recommend"
+    POLICY = "policy"
+    ABSTAIN = "abstain"
+    EXECUTE = "execute"
+    VERIFY = "verify"
+    SEAL = "seal"
+
+
+class Quadrant(_RevTraceEnum):
+    """Uplift segmentation.
+
+    GRAY_ZONE is the honest default: below a minimum sample per stratum, a case
+    gets no confident label and becomes eligible for the exploration budget
+    instead of being acted on as though its uplift were known.
+    """
+
+    PERSUADABLE = "persuadable"
+    SURE_THING = "sure_thing"
+    LOST_CAUSE = "lost_cause"
+    SLEEPING_DOG = "sleeping_dog"
+    GRAY_ZONE = "gray_zone"
+
+
+class InterventionChannel(_RevTraceEnum):
+    PAYMENT_LINK = "payment_link"
+    RETRY = "retry"
+    EMAIL = "email"
+    SMS = "sms"
+    WHATSAPP = "whatsapp"
+    NONE = "none"
