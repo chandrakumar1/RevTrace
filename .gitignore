@@ -106,3 +106,9 @@ data/eval_runs/
 .AppleDouble
 .LSOverride
 ._*
+
+# Local/generated TypeScript build metadata
+*.tsbuildinfo
+
+# Local runtime identifier
+backend/revenue_risks.id
