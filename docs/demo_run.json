@@ -1,0 +1,234 @@
+{
+  "provenance": "DEMO / SYNTHETIC / OFFLINE — not a Razorpay transaction",
+  "database": "revtrace_test",
+  "committed": false,
+  "final_status": "Rolled back — nothing persisted.",
+  "steps": [
+    {
+      "number": 1,
+      "title": "Synthetic failed payment",
+      "subtitle": "A synthetic customer's payment fails. That failure is the recovery opportunity everything below acts on. No real customer, order or payment is involved, and every identifier is marked DEMO.",
+      "tone": "plain",
+      "facts": [
+        {
+          "label": "Merchant",
+          "value": "DEMO Merchant A (synthetic)",
+          "note": null,
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "Order",
+          "value": "order_DEMO283762dc5474",
+          "note": null,
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "Payment",
+          "value": "pay_DEMO4870253580d3",
+          "note": null,
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "Amount",
+          "value": "50000 paise",
+          "note": "Carried as an integer count of minor units and formatted by the browser. No float touches a money path, on either side of the wire.",
+          "tone": "plain",
+          "minor": 50000
+        },
+        {
+          "label": "Status",
+          "value": "failed",
+          "note": "The recovery opportunity",
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "Failure code",
+          "value": "insufficient_funds",
+          "note": null,
+          "tone": "plain",
+          "minor": null
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Payment-link recovery",
+      "subtitle": "The recovery action is built and mapped by the Razorpay adapter interface — production code. The response comes from a deterministic offline demo provider implementing the same interface. Razorpay was not contacted.",
+      "tone": "plain",
+      "facts": [
+        {
+          "label": "Adapter",
+          "value": "Razorpay adapter interface",
+          "note": "payment_links.build_request and create_payment_link — production code path",
+          "tone": "verified",
+          "minor": null
+        },
+        {
+          "label": "Provider",
+          "value": "Deterministic offline demo provider",
+          "note": "Synthetic provider data. No credential is read and no socket is opened.",
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "Link id",
+          "value": "plink_DEMO122db0a74f63",
+          "note": "Marked DEMO, so it cannot be mistaken",
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "Status",
+          "value": "created",
+          "note": null,
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "Reference id",
+          "value": "revtrace-demo-order_DEMO283762dc5474",
+          "note": "How a later webhook is matched back without trusting arrival order",
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "Customer notification",
+          "value": "disabled",
+          "note": "RevTrace decides when a customer is contacted; the policy engine counts it",
+          "tone": "plain",
+          "minor": null
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Signed synthetic webhooks",
+      "subtitle": "Three synthetic webhooks, each signed with a genuine HMAC-SHA256 over the exact bytes that will be delivered — not over a re-serialisation of them. The secret is a synthetic demo secret held in the demo module; the cryptography is the same primitive the verifier uses. Note that payment_link.paid maps to order.paid: the leak graph never depends on one provider's naming.",
+      "tone": "plain",
+      "facts": [
+        {
+          "label": "payment.failed",
+          "value": "payment.failed → payment.failed",
+          "note": "282 bytes · HMAC-SHA256 3951cc8eedb8…",
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "payment.captured",
+          "value": "payment.captured → payment.captured",
+          "note": "284 bytes · HMAC-SHA256 3a6fd9595db5…",
+          "tone": "plain",
+          "minor": null
+        },
+        {
+          "label": "payment_link.paid",
+          "value": "payment_link.paid → order.paid",
+          "note": "328 bytes · HMAC-SHA256 0a189e8c8451…",
+          "tone": "plain",
+          "minor": null
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Verify → Attribute → Persist",
+      "subtitle": "The production verification code path: signature checked over the raw bytes, the owning merchant derived from the signed payment id, the event stored, the payment attempt advanced.",
+      "tone": "verified",
+      "facts": [
+        {
+          "label": "payment.failed",
+          "value": "HMAC verified · merchant verified · persisted",
+          "note": "Merchant derived from the signed payment id through payment_attempts → orders → merchant_id, never from the caller",
+          "tone": "verified",
+          "minor": null
+        },
+        {
+          "label": "payment.captured",
+          "value": "HMAC verified · merchant verified · persisted",
+          "note": "Merchant derived from the signed payment id through payment_attempts → orders → merchant_id, never from the caller",
+          "tone": "verified",
+          "minor": null
+        },
+        {
+          "label": "payment_link.paid",
+          "value": "HMAC verified · merchant verified · persisted",
+          "note": "Merchant derived from the signed payment id through payment_attempts → orders → merchant_id, never from the caller",
+          "tone": "verified",
+          "minor": null
+        },
+        {
+          "label": "Payment attempt",
+          "value": "failed → captured",
+          "note": "Advanced by the webhook, and only forward: a delayed payment.authorized cannot undo a payment.captured that already arrived",
+          "tone": "verified",
+          "minor": null
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Replay protection",
+      "subtitle": "Razorpay never promises exactly-once delivery. The same three synthetic webhooks are delivered again, and the database declines the repeats.",
+      "tone": "verified",
+      "facts": [
+        {
+          "label": "payment.failed",
+          "value": "duplicate detected · nothing written",
+          "note": null,
+          "tone": "verified",
+          "minor": null
+        },
+        {
+          "label": "payment.captured",
+          "value": "duplicate detected · nothing written",
+          "note": null,
+          "tone": "verified",
+          "minor": null
+        },
+        {
+          "label": "payment_link.paid",
+          "value": "duplicate detected · nothing written",
+          "note": null,
+          "tone": "verified",
+          "minor": null
+        },
+        {
+          "label": "Event rows",
+          "value": "3 before · 3 after · unchanged=True",
+          "note": "Idempotency is carried by UNIQUE(merchant_id, external_event_id), so a repeat is an insert that writes nothing rather than a case to detect",
+          "tone": "verified",
+          "minor": null
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "title": "Security controls",
+      "subtitle": "Two attacks against the verified path. Both are refused, and the refusals are the result being demonstrated — these are controls working, not failures. The second was a real defect, found and fixed: a validly-signed webhook about one merchant's payment could be filed under another.",
+      "tone": "refused",
+      "facts": [
+        {
+          "label": "Tampered body",
+          "value": "REFUSED",
+          "note": "The amount was altered from 50000 to 99999 after signing. The HMAC covers the exact octets, so the change is detected.",
+          "tone": "refused",
+          "minor": null
+        },
+        {
+          "label": "Foreign merchant",
+          "value": "REFUSED",
+          "note": "the supplied merchant does not own the payment this event is about A second merchant claimed a validly-signed webhook about the first merchant's payment. Tenancy comes from the signed data, so the claim is rejected rather than silently ignored.",
+          "tone": "refused",
+          "minor": null
+        }
+      ]
+    }
+  ],
+  "captured_at": "2026-09-02T11:35:07.853152+00:00",
+  "source": "app.services.demo.runner.run_demo",
+  "note": "One captured offline demo run. Synthetic throughout; no Razorpay request was made and no credential was read. The run was rolled back, so none of these rows exists in any database."
+}

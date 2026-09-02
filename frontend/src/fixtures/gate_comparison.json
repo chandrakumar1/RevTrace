@@ -1,0 +1,100 @@
+{
+  "abstention_increase": 1674,
+  "abstention_reasons": {
+    "self_recovery_likely": 1674,
+    "sleeping_dog": 802,
+    "uplift_not_significant": 118
+  },
+  "action_reduction": 1674,
+  "action_reduction_bps": 4059,
+  "action_reduction_pct": 40.59,
+  "baseline": {
+    "abstained": 920,
+    "acted": 4124,
+    "description": "the accepted pre-DR-4 gate on the same population"
+  },
+  "by_quadrant": {
+    "gray_zone": {
+      "abstained": 1792,
+      "explored": 87,
+      "ordinary_acted": 0,
+      "reasons": {
+        "self_recovery_likely": 1674,
+        "uplift_not_significant": 118
+      },
+      "total": 1879
+    },
+    "lost_cause": {
+      "abstained": 0,
+      "explored": 0,
+      "ordinary_acted": 0,
+      "reasons": {},
+      "total": 0
+    },
+    "persuadable": {
+      "abstained": 0,
+      "explored": 0,
+      "ordinary_acted": 2363,
+      "reasons": {},
+      "total": 2363
+    },
+    "sleeping_dog": {
+      "abstained": 802,
+      "explored": 0,
+      "ordinary_acted": 0,
+      "reasons": {
+        "sleeping_dog": 802
+      },
+      "total": 802
+    },
+    "sure_thing": {
+      "abstained": 0,
+      "explored": 0,
+      "ordinary_acted": 0,
+      "reasons": {},
+      "total": 0
+    }
+  },
+  "case_count": 10000,
+  "cost_avoided": 5188.0,
+  "cost_avoided_minor": 518800,
+  "experiment_id": "2b3e9c9f-60e8-5413-adc2-456b89e017b1",
+  "exploration_budget_bps": 500,
+  "gate_off": {
+    "abstained": 0,
+    "acted": 5044
+  },
+  "gate_off_cost_minor": 1008800,
+  "gate_on": {
+    "abstained": 2594,
+    "acted": 2450,
+    "explored": 87,
+    "ordinary_acted": 2363
+  },
+  "gate_on_cost_minor": 490000,
+  "gray_zone": {
+    "abstained": 1792,
+    "explored": 87,
+    "ordinary_acted": 0,
+    "self_recovery_likely": 1674,
+    "total": 1879,
+    "uplift_not_significant": 118
+  },
+  "intervention": "create_payment_link",
+  "label": "SYNTHETIC / DEMO EVALUATION \u2014 gate and spend comparison",
+  "note": "Decisions only. Causal estimates live in docs/evaluation.json and are deliberately not duplicated here: this is a spend comparison, not a causal result. `experiment_id` identifies the population both describe.",
+  "provenance": {
+    "alpha_bps": 500,
+    "as_of": "2026-08-31T00:00:00+00:00",
+    "bootstrap_seed": 20260830,
+    "folds": 5,
+    "gray_zone_policy": "current_baseline",
+    "mde_bps": 1000,
+    "migration": "9c41e07b2d58",
+    "policy_revision": "post-DR-4",
+    "resamples": 10000
+  },
+  "seed": 42,
+  "treatment_units": 5044,
+  "unit_cost": 200
+}
