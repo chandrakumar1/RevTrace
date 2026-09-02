@@ -262,6 +262,23 @@ Measured on the current tree:
 
 Nothing is skipped, and no test is marked expected-to-fail.
 
+## 8a. Four ways to look at this
+
+They need very different things from you, and it is worth knowing which one you
+are in before something appears not to work.
+
+| | Needs a backend? | Needs a database? |
+|---|---|---|
+| **Static pages** — the ledger and the evaluation | **No.** Committed fixtures, read at build time | No |
+| **Interactive synthetic demo** — the *Live demo* page | Yes, but only when you press **Run Demo** | Yes, a throwaway one |
+| **Full local setup** — the API, `/docs`, the whole suite | Yes | Yes |
+| **Benchmark reproduction** — regenerating the evaluation | No server; a script | Yes, a test database |
+
+Pages 1 and 2 render with the backend switched off, and a deployed site loads
+its static content without the API being awake. Only the live demo calls it, and
+only on an explicit click — if the backend is asleep or unreachable the page says
+so and the rest of the site is unaffected.
+
 ## 9. Running it locally
 
 Replace `USER` with your PostgreSQL role. Nothing below needs a credential of any
@@ -377,11 +394,27 @@ be a hosted instance with a public connection string, supplied to the backend as
 Three more things that are easy to get wrong:
 
 **The Vite proxy is development-only.** `server.proxy` exists in the dev server
-and is absent from a production build. Deployed, the frontend's `/api` requests
-must be routed some other way — a Vercel rewrite from `/api/*` to the Render URL
-is the smallest change and keeps the single-origin property, so no CORS
-middleware is needed. Pointing the frontend at an absolute backend URL instead
-*would* require adding CORS to the backend.
+and is absent from a production build, so a deployed frontend must be told where
+the API is. Two supported ways:
+
+| | Frontend build | Backend |
+|---|---|---|
+| **Absolute API URL** | `VITE_API_BASE_URL=https://your-backend.example.com` | `FRONTEND_ORIGIN=https://your-frontend.example.com` |
+| **Same-origin rewrite** | leave `VITE_API_BASE_URL` unset; add a host rewrite from `/api/*` to the backend | leave `FRONTEND_ORIGIN` unset |
+
+The first is explicit and works on any static host. The second keeps the
+single-origin property, so no CORS is involved at all. **Do not do both** — a
+rewrite plus an absolute URL sends requests somewhere neither was configured
+for.
+
+`VITE_API_BASE_URL` is read at **build** time, not run time: changing it means
+rebuilding. It is inlined into readable JavaScript, so it must never hold a
+secret.
+
+**`FRONTEND_ORIGIN` is one origin, and empty means no CORS middleware at all.**
+Scheme and host with no path and no trailing slash — the backend refuses a
+malformed value at startup rather than letting it fail as an opaque browser
+error. Credentials are never enabled; there is no cookie or token to send.
 
 **Run the migrations against the hosted database** before first boot:
 `alembic upgrade head` with `DATABASE_URL` set to the hosted DSN. The current

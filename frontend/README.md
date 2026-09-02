@@ -81,10 +81,27 @@ Without `DEMO_DATABASE_URL` the endpoint reports itself disabled and the page
 explains why instead of offering a button that would fail. The demo always rolls
 back; there is no HTTP equivalent of `run_demo.py --commit`.
 
-**Use relative `/api` paths only.** The Vite dev server proxies `/api` to
-`localhost:8000` so the browser sees one origin. That is why the backend has no
-CORS middleware — an absolute `http://localhost:8000` URL would bypass the proxy
-and be refused by the browser.
+**In development, use relative `/api` paths only.** The Vite dev server proxies
+`/api` to `localhost:8000` so the browser sees one origin and no CORS is
+involved. Hard-coding `http://localhost:8000` would bypass the proxy and be
+refused by the browser.
+
+### Building for deployment
+
+`VITE_API_BASE_URL` sets the API origin at **build** time:
+
+```sh
+VITE_API_BASE_URL=https://your-backend.example.com npm run build
+```
+
+Unset, the base is `""` and requests stay relative — the development case, and
+also correct if your host rewrites `/api/*` to the backend. Set, requests become
+absolute and cross-origin, so the backend must name this app's origin in
+`FRONTEND_ORIGIN`. A trailing slash is stripped rather than trusted, so
+`https://host/` cannot produce `https://host//api/v1`.
+
+Only `VITE_`-prefixed variables reach the bundle, and everything that does is
+inlined into readable JavaScript. **Never put a secret in one.**
 
 **Every string on that page comes from the backend.** The page makes claims
 about which code path is production and which response is synthetic, and a

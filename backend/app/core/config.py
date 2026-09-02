@@ -40,6 +40,22 @@ class Settings(BaseSettings):
     app_env: Literal["development", "test", "staging", "production"] = "development"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
+    #: The single browser origin permitted to call this API cross-origin.
+    #: **Empty by default, and empty means no CORS middleware is installed at
+    #: all** — not a permissive default, and not a wildcard.
+    #:
+    #: Local development does not need this: the Vite dev server proxies `/api`
+    #: so the browser sees one origin and no cross-origin request is ever made.
+    #: It exists for a deployment where the static frontend is served from a
+    #: different host than the API, and it holds exactly one origin because a
+    #: list invites an entry nobody later remembers approving.
+    #:
+    #: An origin is a scheme, host and optional port — never a path and never a
+    #: trailing slash. A value carrying either would silently match nothing, so
+    #: the validator refuses it rather than letting a deployment fail as a
+    #: mysterious browser error.
+    frontend_origin: str = ""
+
     # --- Database --------------------------------------------------------
     database_url: str = Field(
         ...,
@@ -106,6 +122,28 @@ class Settings(BaseSettings):
             )
         return v
 
+    @field_validator("frontend_origin")
+    @classmethod
+    def _validate_frontend_origin(cls, v: str) -> str:
+        origin = v.strip()
+        if not origin:
+            return ""
+
+        if not origin.startswith(("http://", "https://")):
+            raise ValueError(
+                "FRONTEND_ORIGIN must be a browser origin including its scheme, "
+                "e.g. https://example.com — a bare hostname never matches."
+            )
+
+        remainder = origin.split("://", 1)[1]
+        if "/" in remainder:
+            raise ValueError(
+                "FRONTEND_ORIGIN must be a scheme, host and optional port with no "
+                "path and no trailing slash. A browser sends 'https://example.com' "
+                "as the Origin header, so anything longer matches nothing and the "
+                "requests fail as opaque CORS errors."
+            )
+        return origin
 
     @field_validator("database_url")
     @classmethod
@@ -126,7 +164,6 @@ class Settings(BaseSettings):
             )
 
         return v
-
 
     @property
     def razorpay_configured(self) -> bool:
@@ -158,6 +195,11 @@ class Settings(BaseSettings):
         property has nowhere to put that.
         """
         return bool(self.demo_database_url.strip())
+
+    @property
+    def cors_enabled(self) -> bool:
+        """True only when an explicit frontend origin has been configured."""
+        return bool(self.frontend_origin)
 
     @property
     def gemini_configured(self) -> bool:

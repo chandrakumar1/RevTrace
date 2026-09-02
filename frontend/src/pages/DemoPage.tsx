@@ -20,7 +20,7 @@
 import { useEffect, useState } from "react";
 
 import { Panel } from "@/components/Panel";
-import { DemoApiError, fetchDemoStatus, runDemo } from "@/lib/api";
+import { DemoApiError, DemoUnreachableError, fetchDemoStatus, runDemo } from "@/lib/api";
 import { formatMinor } from "@/lib/format";
 import type { DemoFact, DemoRun, DemoStatus, DemoStep, DemoTone } from "@/types/demo";
 
@@ -124,6 +124,21 @@ function DemoBanner() {
   );
 }
 
+/**
+ * A failure, in words a visitor can act on.
+ *
+ * Both known error types already carry a suitable sentence — the backend's own
+ * `detail` for a refusal, and a deployment-aware one for an unreachable host.
+ * Anything else is genuinely unexpected and says so rather than guessing.
+ */
+function messageFor(cause: unknown): string {
+  if (cause instanceof DemoApiError || cause instanceof DemoUnreachableError) {
+    return cause.message;
+  }
+  return "Something went wrong running the demo. Nothing was written — the run is " +
+    "rolled back whether or not it succeeds.";
+}
+
 export function DemoPage() {
   const [status, setStatus] = useState<DemoStatus | null>(null);
   const [run, setRun] = useState<DemoRun | null>(null);
@@ -138,12 +153,11 @@ export function DemoPage() {
       })
       .catch((cause: unknown) => {
         if (cancelled) return;
+        // The status probe failing is not itself a reason to block the demo:
+        // a sleeping free-tier backend answers the second request. The button
+        // stays enabled and the message explains what happened.
         setStatus(null);
-        setError(
-          cause instanceof DemoApiError
-            ? cause.message
-            : "The backend is not reachable. Start it with `uvicorn app.main:app --reload`.",
-        );
+        setError(messageFor(cause));
       });
     return () => {
       cancelled = true;
@@ -157,11 +171,7 @@ export function DemoPage() {
       setRun(await runDemo());
     } catch (cause: unknown) {
       setRun(null);
-      setError(
-        cause instanceof DemoApiError
-          ? cause.message
-          : "The backend is not reachable. Start it with `uvicorn app.main:app --reload`.",
-      );
+      setError(messageFor(cause));
     } finally {
       setRunning(false);
     }
