@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="RevTrace">
+  <!--
+    The mark is the experiment.
+
+    A single history enters from the left and splits: the upper path is the
+    treated arm, the lower is the untouched holdout. The gap between their
+    endpoints is the measured effect — the only thing RevTrace claims to have
+    caused.
+
+    Tuned for 16px first. The fork spans nearly the full tile and the strokes
+    are heavy, because at favicon size a mark either reads as one shape or it
+    reads as noise. The split point is a small solid dot rather than a ring:
+    a ring closes up and becomes a blob below 24px.
+
+    Opaque ground, so it reads against both light and dark browser chrome.
+  -->
+  <rect width="32" height="32" rx="7" fill="#0b0d12" />
+
+  <g fill="none" stroke-linecap="round" stroke-width="3.4">
+    <!-- Shared history, before assignment. -->
+    <path d="M4 16 H12" stroke="#666d80" />
+
+    <!-- Holdout: untouched, and flat. Drawn first so treatment sits above. -->
+    <path d="M12 16 C18 16, 20 19.5, 28 20.5" stroke="#8189c9" />
+
+    <!-- Treatment: lifted. The gap at the right edge is the effect. -->
+    <path d="M12 16 C18 16, 20 8, 28 6.5" stroke="#00d9a3" />
+  </g>
+
+  <!-- Randomisation. -->
+  <circle cx="12" cy="16" r="2.1" fill="#eef0f5" />
+</svg>

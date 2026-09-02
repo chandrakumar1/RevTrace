@@ -1,0 +1,105 @@
+/**
+ * Design tokens for the RevTrace overview.
+ *
+ * The identity comes from the subject: a measurement instrument for money.
+ * Deep near-black with a cool cast, one confident accent reserved for the only
+ * quantity the system can claim to have *caused*, a warm muted tone for the
+ * money it explicitly cannot claim, and a restrained red used solely for
+ * refusal. Colour carries meaning here; it is not decoration, and no hue is
+ * used for two different ideas.
+ */
+
+:root {
+  /* --- Ground ---------------------------------------------------- */
+  /* Not pure black: a slight blue cast keeps large dark fields from
+     looking dead, and gives the layered panels somewhere to sit. */
+  --void: oklch(0.14 0.014 265);
+  --base: oklch(0.17 0.016 265);
+  --raised: oklch(0.21 0.018 265);
+  --panel: oklch(0.24 0.02 265);
+
+  /* --- Ink ------------------------------------------------------- */
+  --text: oklch(0.96 0.004 265);
+  --text-muted: oklch(0.74 0.012 265);
+  --text-faint: oklch(0.56 0.014 265);
+  --text-ghost: oklch(0.42 0.014 265);
+
+  /* --- Lines ----------------------------------------------------- */
+  --line: oklch(0.3 0.018 265);
+  --line-bright: oklch(0.4 0.022 265);
+
+  /* --- Meaning --------------------------------------------------- */
+  /* Caused. The one figure the system can defend, and the only place
+     this colour is allowed to appear. */
+  --caused: oklch(0.78 0.16 172);
+  --caused-dim: oklch(0.5 0.1 172);
+
+  /* Credited but not earned. Deliberately warm and slightly drab —
+     it is the money a naive dashboard would have claimed. */
+  --unearned: oklch(0.76 0.12 68);
+  --unearned-dim: oklch(0.48 0.08 68);
+
+  /* Gross. Neutral by design: it is a total, not a claim. */
+  --gross: oklch(0.66 0.02 265);
+
+  /* Refusal, and refusal only. Never used for an error state that is
+     not a deliberate rejection. */
+  --refuse: oklch(0.66 0.17 22);
+
+  /* The holdout population — present, untouched, and the reason any of
+     this is measurable. */
+  --holdout: oklch(0.62 0.09 285);
+
+  /* --- Type ------------------------------------------------------ */
+  /* No webfont: a request that can fail is a heading that can reflow.
+     The stacks below are chosen for a tight, editorial grotesque on
+     display type and a genuine monospace for technical metadata. */
+  --font-display: "Helvetica Neue", Inter, "SF Pro Display", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui,
+    sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo,
+    Consolas, monospace;
+
+  /* --- Rhythm ---------------------------------------------------- */
+  --measure: 62ch;
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+  --section-gap: clamp(6rem, 14vh, 11rem);
+  --radius: 3px;
+
+  /* --- Motion ---------------------------------------------------- */
+  /* One easing for entrances, one for exits. A site with six curves
+     reads as six different products. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 220ms;
+  --dur: 520ms;
+  --dur-slow: 900ms;
+
+  color-scheme: dark;
+}
+
+/**
+ * Reduced motion is honoured globally rather than per-component.
+ *
+ * Entrances become instant and decorative motion stops. Content never depends
+ * on an animation having run — every reveal starts from a legible state and
+ * animates toward the same one, so disabling motion removes movement and
+ * nothing else.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms;
+    --dur: 1ms;
+    --dur-slow: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

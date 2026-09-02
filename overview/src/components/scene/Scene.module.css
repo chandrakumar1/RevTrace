@@ -1,0 +1,27 @@
+.eventField {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* The field sits behind the copy and is masked away from the text column, so
+     nothing ever competes with a heading for contrast. */
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 18%,
+    #000 74%,
+    transparent 100%
+  );
+}
+
+.splitField {
+  width: 100%;
+  height: clamp(280px, 46vh, 460px);
+  display: block;
+}
+
+@media (max-width: 720px) {
+  .splitField {
+    height: clamp(240px, 42vh, 320px);
+  }
+}
