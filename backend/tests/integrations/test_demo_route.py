@@ -124,6 +124,100 @@ class TestTheDemoIsOffUnlessEnabled:
         with pytest.raises(DemoUnavailable, match="PostgreSQL"):
             resolve_demo_dsn(_settings("sqlite:///demo.db"))
 
+    def test_a_bad_demo_dsn_disables_the_demo_rather_than_the_api(
+        self, disabled_client: TestClient
+    ) -> None:
+        """A demo misconfiguration must not stop the application from booting.
+
+        `DATABASE_URL` is fatal when malformed because nothing can serve a
+        request without it. This one is not: the endpoint reports 503 and every
+        other route keeps working.
+        """
+        from app.main import create_app
+
+        app = create_app()
+        app.dependency_overrides[get_settings] = lambda: _settings("sqlite:///demo.db")
+        client = TestClient(app)
+
+        assert client.get("/health").status_code == 200
+        assert client.post("/api/v1/demo/run").status_code == 503
+
+
+class TestTheDemoDsnPinsPsycopg3:
+    """A hosted `postgresql://` URL must not select psycopg2.
+
+    This is the Render failure: `/demo/status` reported the demo enabled, and
+    `/demo/run` then died inside `create_engine` with `ModuleNotFoundError: No
+    module named 'psycopg2'`. SQLAlchemy's default driver for a bare
+    `postgresql://` is psycopg2, which this project deliberately does not
+    install.
+    """
+
+    @pytest.mark.parametrize(
+        "supplied",
+        [
+            "postgresql://user:pw@host:5432/revtrace_demo",  # what Render emits
+            "postgres://user:pw@host:5432/revtrace_demo",  # what Heroku emits
+            "postgresql+psycopg://user:pw@host:5432/revtrace_demo",  # already pinned
+        ],
+    )
+    def test_every_accepted_form_resolves_to_the_psycopg_scheme(self, supplied: str) -> None:
+        resolved = resolve_demo_dsn(_settings(supplied))
+
+        assert resolved.startswith("postgresql+psycopg://")
+        assert "psycopg2" not in resolved
+
+    def test_the_engine_sqlalchemy_builds_uses_psycopg_not_psycopg2(self) -> None:
+        """The claim that actually matters, asserted against SQLAlchemy itself.
+
+        `create_engine` resolves and imports the DBAPI without connecting, so
+        this reaches the real dialect while staying hermetic.
+        """
+        from sqlalchemy import create_engine
+
+        resolved = resolve_demo_dsn(_settings("postgresql://user:pw@host:5432/revtrace_demo"))
+        engine = create_engine(resolved)
+        try:
+            assert engine.dialect.driver == "psycopg"
+            assert engine.dialect.driver != "psycopg2"
+        finally:
+            engine.dispose()
+
+    def test_the_unnormalised_url_is_what_would_have_failed(self) -> None:
+        """Proves the normalisation is load-bearing, not decorative.
+
+        Without it, the same URL reaches `create_engine` and raises the exact
+        error Render reported. If psycopg2 ever appeared in the environment this
+        test would fail — and that is the right alarm, because its presence
+        would silently restore the two-driver ambiguity.
+        """
+        from sqlalchemy import create_engine
+
+        with pytest.raises(ModuleNotFoundError, match="psycopg2"):
+            create_engine("postgresql://user:pw@host:5432/revtrace_demo")
+
+    def test_the_forbidden_database_check_survives_normalisation(self) -> None:
+        """Rewriting the scheme must not smuggle a protected database through."""
+        for name in sorted(FORBIDDEN_DATABASES):
+            with pytest.raises(DemoUnavailable, match=name):
+                resolve_demo_dsn(_settings(f"postgresql://user:pw@host:5432/{name}"))
+
+    def test_an_explicit_psycopg2_driver_is_refused_not_rewritten(self) -> None:
+        """Someone who named a driver meant it; answer them, do not substitute."""
+        with pytest.raises(DemoUnavailable, match="psycopg"):
+            resolve_demo_dsn(_settings("postgresql+psycopg2://user:pw@host:5432/revtrace_demo"))
+
+    def test_the_refusal_does_not_echo_the_dsn(self) -> None:
+        """A DSN carries a password, and this message reaches an HTTP response."""
+        try:
+            resolve_demo_dsn(_settings("mysql://user:hunter2@host:3306/revtrace_demo"))
+        except DemoUnavailable as exc:
+            assert "hunter2" not in str(exc)
+            assert "mysql" not in str(exc)
+            assert "://" not in str(exc)
+        else:  # pragma: no cover - the call above must raise
+            pytest.fail("a non-PostgreSQL DSN must be refused")
+
     def test_the_database_name_is_read_without_its_credentials(self) -> None:
         assert database_name("postgresql+psycopg://u:p@host:5432/revtrace_dev") == "revtrace_dev"
         assert database_name("postgresql://h/revtrace_dev?sslmode=require") == "revtrace_dev"

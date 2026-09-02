@@ -36,7 +36,7 @@ from typing import Literal
 from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.config import Settings
+from app.core.config import Settings, normalise_postgres_dsn
 from app.integrations.razorpay.demo import (
     DEMO_EVENTS,
     DEMO_WEBHOOK_SECRET,
@@ -155,11 +155,25 @@ def database_name(dsn: str) -> str:
 
 
 def resolve_demo_dsn(settings: Settings) -> str:
-    """The demo's DSN, or a refusal explaining why there is none.
+    """The demo's DSN, pinned to psycopg 3, or a refusal explaining why not.
 
-    Every refusal message here is written to be shown to whoever called the
-    endpoint: it names the setting and the refused database, and never the DSN
-    itself.
+    **The driver is pinned here, not assumed.** A hosted provider hands out a
+    bare `postgresql://` URL, and SQLAlchemy reads that as a request for
+    psycopg2 — which this project does not install. Left unnormalised it fails
+    inside `create_engine` with `ModuleNotFoundError`, on this endpoint alone,
+    after `/demo/status` has already reported the demo enabled.
+
+    The normaliser is `config.normalise_postgres_dsn`, the same one
+    `DATABASE_URL` uses. Sharing it is the point: two copies of this rule is how
+    the settings drifted apart in the first place.
+
+    A bad value here is **not fatal**, unlike `DATABASE_URL`. It disables the
+    demo and leaves the rest of the API serving, so a demo misconfiguration
+    cannot take down a deployment.
+
+    Every refusal message is written to be shown to whoever called the endpoint:
+    it names the setting and the refused database, and never the DSN itself —
+    which would leak a password.
     """
     dsn = settings.demo_database_url.strip()
     if not dsn:
@@ -168,10 +182,11 @@ def resolve_demo_dsn(settings: Settings) -> str:
             "deliberately empty by default, so a deployment that has not chosen "
             "a demo database cannot run a demo against any other one."
         )
-    if not dsn.startswith("postgresql"):
-        raise DemoUnavailable(
-            "DEMO_DATABASE_URL must be a PostgreSQL DSN; RevTrace requires PostgreSQL."
-        )
+
+    try:
+        dsn = normalise_postgres_dsn(dsn, setting="DEMO_DATABASE_URL")
+    except ValueError as exc:
+        raise DemoUnavailable(str(exc)) from None
 
     name = database_name(dsn)
     if name in FORBIDDEN_DATABASES:

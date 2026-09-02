@@ -22,6 +22,52 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ENV_FILE = REPO_ROOT / ".env"
 
+#: The one driver RevTrace uses. Psycopg 3, named explicitly, because
+#: SQLAlchemy's default for a bare `postgresql://` URL is **psycopg2** — a
+#: package this project does not install and does not want.
+PSYCOPG_SCHEME = "postgresql+psycopg://"
+
+#: What hosted providers hand out. Render, Heroku and others emit `postgres://`
+#: or `postgresql://`, neither of which names a driver, so both must be pinned
+#: before SQLAlchemy sees them.
+_GENERIC_SCHEMES = ("postgres://", "postgresql://")
+
+
+def normalise_postgres_dsn(dsn: str, *, setting: str) -> str:
+    """Pin a PostgreSQL DSN to psycopg 3, or raise `ValueError`.
+
+    Shared by every DSN this application accepts, because the alternative was
+    the bug this exists to prevent: `DATABASE_URL` normalised its scheme and
+    `DEMO_DATABASE_URL` did not, so a hosted `postgresql://` URL reached
+    `create_engine` unchanged, selected the psycopg2 dialect, and failed at
+    runtime with `ModuleNotFoundError: No module named 'psycopg2'` — on one
+    endpoint only, long after startup had reported everything healthy.
+
+    **Never echoes the DSN.** A connection string carries a password, and this
+    message reaches logs and, for the demo, an HTTP response. The `setting`
+    argument names *which* variable is wrong so the message is still actionable.
+    """
+    value = dsn.strip()
+    if not value:
+        raise ValueError(f"{setting} must not be empty")
+
+    for scheme in _GENERIC_SCHEMES:
+        if value.startswith(scheme):
+            value = PSYCOPG_SCHEME + value[len(scheme) :]
+            break
+
+    if not value.startswith(PSYCOPG_SCHEME):
+        # Reached by a non-PostgreSQL URL, and by an explicit `+psycopg2`, which
+        # is refused rather than rewritten: someone who named a driver meant it,
+        # and silently substituting another would be a surprising answer to a
+        # deliberate request.
+        raise ValueError(
+            f"{setting} must be a PostgreSQL DSN using the psycopg driver; "
+            "RevTrace requires PostgreSQL (JSONB and native uuid types are used)."
+        )
+
+    return value
+
 
 class Settings(BaseSettings):
     """Runtime configuration.
@@ -148,22 +194,13 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def _validate_database_url(cls, v: str) -> str:
-        if not v or not v.strip():
-            raise ValueError("DATABASE_URL must not be empty")
+        """Fatal when wrong: the application cannot serve a request without it.
 
-        if v.startswith("postgres://"):
-            v = "postgresql://" + v[len("postgres://") :]
-
-        if v.startswith("postgresql://"):
-            v = "postgresql+psycopg://" + v[len("postgresql://") :]
-
-        if not v.startswith("postgresql+psycopg://"):
-            raise ValueError(
-                "DATABASE_URL must be a PostgreSQL DSN using the psycopg driver; "
-                "RevTrace requires PostgreSQL (JSONB and native uuid types are used)."
-            )
-
-        return v
+        `demo_database_url` is deliberately *not* validated here. A demo
+        misconfiguration must not stop the API from booting — the demo endpoint
+        reports 503 instead, and the same normaliser runs there.
+        """
+        return normalise_postgres_dsn(v, setting="DATABASE_URL")
 
     @property
     def razorpay_configured(self) -> bool:

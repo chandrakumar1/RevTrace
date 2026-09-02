@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from app.core.config import Settings, get_settings
+from app.core.config import Settings, get_settings, normalise_postgres_dsn
 from app.core.security import REDACTED, mask, redact
 
 
@@ -23,6 +23,51 @@ def test_database_url_must_be_postgres() -> None:
 def test_database_url_must_not_be_empty() -> None:
     with pytest.raises(ValidationError):
         Settings(database_url="   ")  # type: ignore[call-arg]
+
+
+class TestPostgresDsnNormalisation:
+    """One rule, shared by every DSN this application accepts.
+
+    Shared deliberately: `DATABASE_URL` normalised its scheme while
+    `DEMO_DATABASE_URL` did not, and the gap surfaced in production as
+    `ModuleNotFoundError: No module named 'psycopg2'` on a single endpoint.
+    """
+
+    @pytest.mark.parametrize(
+        "supplied",
+        [
+            "postgres://u:p@h:5432/d",  # Heroku-style
+            "postgresql://u:p@h:5432/d",  # Render-style
+            "postgresql+psycopg://u:p@h:5432/d",  # already pinned
+        ],
+    )
+    def test_every_accepted_form_is_pinned_to_psycopg3(self, supplied: str) -> None:
+        assert normalise_postgres_dsn(supplied, setting="X") == "postgresql+psycopg://u:p@h:5432/d"
+
+    def test_the_settings_field_is_normalised(self) -> None:
+        s = Settings(database_url="postgresql://u@localhost:5432/d")  # type: ignore[call-arg]
+        assert s.database_url == "postgresql+psycopg://u@localhost:5432/d"
+
+    def test_an_explicit_psycopg2_driver_is_refused(self) -> None:
+        """Refused, not rewritten: a named driver is a deliberate request."""
+        with pytest.raises(ValueError, match="psycopg"):
+            normalise_postgres_dsn("postgresql+psycopg2://u@h/d", setting="X")
+
+    def test_the_setting_name_appears_so_the_message_is_actionable(self) -> None:
+        with pytest.raises(ValueError, match="DEMO_DATABASE_URL"):
+            normalise_postgres_dsn("sqlite:///x.db", setting="DEMO_DATABASE_URL")
+
+    def test_the_dsn_is_never_echoed(self) -> None:
+        """These messages reach logs, and one of them reaches an HTTP response."""
+        with pytest.raises(ValueError) as caught:
+            normalise_postgres_dsn("mysql://user:hunter2@host/d", setting="X")
+        assert "hunter2" not in str(caught.value)
+        assert "://" not in str(caught.value)
+
+    def test_surrounding_whitespace_is_stripped(self) -> None:
+        assert normalise_postgres_dsn("  postgresql://h/d  ", setting="X") == (
+            "postgresql+psycopg://h/d"
+        )
 
 
 def test_secrets_are_secretstr_not_plain_str() -> None:
