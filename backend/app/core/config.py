@@ -106,17 +106,27 @@ class Settings(BaseSettings):
             )
         return v
 
+
     @field_validator("database_url")
     @classmethod
     def _validate_database_url(cls, v: str) -> str:
         if not v or not v.strip():
             raise ValueError("DATABASE_URL must not be empty")
-        if not v.startswith("postgresql"):
+
+        if v.startswith("postgres://"):
+            v = "postgresql://" + v[len("postgres://") :]
+
+        if v.startswith("postgresql://"):
+            v = "postgresql+psycopg://" + v[len("postgresql://") :]
+
+        if not v.startswith("postgresql+psycopg://"):
             raise ValueError(
-                "DATABASE_URL must be a PostgreSQL DSN; RevTrace requires PostgreSQL "
-                "(JSONB and native uuid types are used)."
+                "DATABASE_URL must be a PostgreSQL DSN using the psycopg driver; "
+                "RevTrace requires PostgreSQL (JSONB and native uuid types are used)."
             )
+
         return v
+
 
     @property
     def razorpay_configured(self) -> bool:
