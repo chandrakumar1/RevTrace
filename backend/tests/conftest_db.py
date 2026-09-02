@@ -22,7 +22,11 @@ import pytest
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
-DEFAULT_TEST_DSN = "postgresql+psycopg://sancha@localhost:5432/revtrace_test"
+#: No role in the DSN, deliberately. libpq falls back to the operating-system
+#: user, so this default works on any machine whose PostgreSQL role matches the
+#: login name — and it keeps one developer's username out of a published
+#: repository. Set `TEST_DATABASE_URL` when the role differs.
+DEFAULT_TEST_DSN = "postgresql+psycopg://localhost:5432/revtrace_test"
 
 #: A DSN is only accepted if its database name contains one of these. This is
 #: the guard that keeps revtrace_dev out of the test suite.

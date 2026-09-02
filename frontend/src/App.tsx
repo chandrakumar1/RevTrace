@@ -1,8 +1,12 @@
 /**
  * Shell: page selection, fixture selection, the synthetic label.
  *
- * There is no API layer. The app reads committed fixtures at build time; wiring
- * to a live endpoint is a later phase and no endpoint shape has been agreed.
+ * Two kinds of page live here and the difference matters. The ledger and
+ * evaluation pages read **committed fixtures** at build time — frozen backend
+ * output, so the numbers on them are the ones that were reviewed. The demo page
+ * calls the backend live. The fixture picker therefore belongs to the first two
+ * and is hidden on the third, where there is no fixture to pick and showing one
+ * would suggest the demo were reading it.
  */
 
 import { useState } from "react";
@@ -10,6 +14,7 @@ import { useState } from "react";
 import { FixturePicker } from "@/components/FixturePicker";
 import { SyntheticBanner } from "@/components/SyntheticBanner";
 import { DEFAULT_FIXTURE_ID, fixtureById } from "@/fixtures";
+import { DemoPage } from "@/pages/DemoPage";
 import { EvaluationPage, EvaluationRefusal } from "@/pages/EvaluationPage";
 import { LedgerPage, LedgerRefusal } from "@/pages/LedgerPage";
 import { isAvailable } from "@/types/report";
@@ -29,6 +34,13 @@ const PAGES = [
     blurb:
       "What the uplift model measured, and what these numbers do not establish.",
   },
+  {
+    id: "demo",
+    ordinal: "Page 3",
+    title: "Live demo",
+    blurb:
+      "One synthetic recovery, end to end — failure, link, signed webhooks, verification, replay, and two refused attacks.",
+  },
 ] as const;
 
 type PageId = (typeof PAGES)[number]["id"];
@@ -40,6 +52,7 @@ export default function App() {
   const fixture = fixtureById(fixtureId);
   const payload = fixture.payload;
   const page = PAGES.find((p) => p.id === pageId) ?? PAGES[0];
+  const isDemo = pageId === "demo";
 
   return (
     <div className="min-h-dvh bg-surface">
@@ -57,7 +70,7 @@ export default function App() {
                 {page.blurb}
               </p>
             </div>
-            <SyntheticBanner label={payload.label} />
+            {isDemo ? null : <SyntheticBanner label={payload.label} />}
           </div>
 
           <nav className="mt-5 flex gap-1" aria-label="Pages">
@@ -83,15 +96,19 @@ export default function App() {
           </nav>
         </header>
 
-        <div className="mb-8">
-          <FixturePicker
-            value={fixtureId}
-            onChange={setFixtureId}
-            description={fixture.description}
-          />
-        </div>
+        {isDemo ? null : (
+          <div className="mb-8">
+            <FixturePicker
+              value={fixtureId}
+              onChange={setFixtureId}
+              description={fixture.description}
+            />
+          </div>
+        )}
 
-        {isAvailable(payload) ? (
+        {isDemo ? (
+          <DemoPage />
+        ) : isAvailable(payload) ? (
           pageId === "ledger" ? (
             <LedgerPage report={payload} />
           ) : (
@@ -105,8 +122,10 @@ export default function App() {
 
         <footer className="mt-10 border-t border-line pt-6 text-xs leading-relaxed text-faint">
           Money is carried as integer minor units and rates as integer basis points; the
-          browser formats them and computes nothing. Reading a committed fixture — no API is
-          wired.
+          browser formats them and computes nothing.{" "}
+          {isDemo
+            ? "This page calls the backend live; every figure on it is synthetic and the run is rolled back."
+            : "Reading a committed fixture — this page makes no request."}
         </footer>
       </div>
     </div>

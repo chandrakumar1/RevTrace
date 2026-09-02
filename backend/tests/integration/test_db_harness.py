@@ -26,16 +26,12 @@ class TestDsnSafety:
         assert "test" in _database_name(resolve_test_dsn())
 
     def test_revtrace_dev_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv(
-            "TEST_DATABASE_URL", "postgresql+psycopg://sancha@localhost:5432/revtrace_dev"
-        )
+        monkeypatch.setenv("TEST_DATABASE_URL", "postgresql+psycopg://localhost:5432/revtrace_dev")
         with pytest.raises(RuntimeError, match="revtrace_dev must never be used"):
             resolve_test_dsn()
 
     def test_arbitrary_database_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv(
-            "TEST_DATABASE_URL", "postgresql+psycopg://sancha@localhost:5432/postgres"
-        )
+        monkeypatch.setenv("TEST_DATABASE_URL", "postgresql+psycopg://localhost:5432/postgres")
         with pytest.raises(RuntimeError, match="refusing to run tests"):
             resolve_test_dsn()
 

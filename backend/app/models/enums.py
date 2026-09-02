@@ -229,6 +229,12 @@ class AbstainReason(_RevTraceEnum):
     SLEEPING_DOG = "sleeping_dog"
     SURE_THING = "sure_thing"
     LOST_CAUSE = "lost_cause"
+    #: A significant positive lift (`ci_low > 0`) on customers whose control
+    #: rate sits at or above the fold's self-recovery ceiling. Not an evidence
+    #: failure — the effect is measured, positive, and excludes zero. A value
+    #: judgement: most of what the action would be credited with was going to
+    #: happen anyway, so acting buys recovery it did not cause.
+    SELF_RECOVERY_LIKELY = "self_recovery_likely"
     INSUFFICIENT_SAMPLE = "insufficient_sample"
     CONTACT_BUDGET_EXHAUSTED = "contact_budget_exhausted"
     CUSTOMER_OPTED_OUT = "customer_opted_out"

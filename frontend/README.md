@@ -1,11 +1,14 @@
 # RevTrace Frontend
 
-React · Vite · TypeScript · Tailwind CSS · Recharts
+React 19 · Vite 7 · TypeScript · Tailwind CSS 4
 
-**Status: scaffolded, dependencies not installed.** The Vite + React +
-TypeScript + Tailwind v4 skeleton is in place and reads committed fixtures. The
-dashboard views are still to come; `App.tsx` is a fixture picker and a raw
-shell, nothing more.
+**No charting library.** The visualisations are laid out with CSS from the
+report payload. Every visible number comes from the backend through a formatter,
+and nothing on screen is derived from layout geometry.
+
+**Status: three pages.** The incrementality ledger and the evaluation view read
+committed fixtures; the live demo calls the backend. The remaining dashboard
+views listed at the bottom of this file are still to come.
 
 ## Local development
 
@@ -17,9 +20,8 @@ npm run build   # tsc -b && vite build
 npm run typecheck
 ```
 
-Node 24.19.0 and npm 11.17.0 are the versions this was written against. **npm
-is the package manager** — pnpm, yarn and bun are not installed and are not
-being added.
+Requires **Node 20.19+** and **npm 10+**; written against Node 24 and npm 11.
+**npm is the package manager** — no pnpm, yarn or bun lockfile is maintained.
 
 Tailwind v4 is configured through `@tailwindcss/vite` and a CSS-first
 `@import "tailwindcss"` in `src/index.css`. That is why there is deliberately no
@@ -55,8 +57,38 @@ float touches a money or probability path, on either side of the wire.
 there was no incremental recovery to apportion, which is a different statement
 from a ranking that did no better than chance.
 
-**No API layer exists yet.** The app reads these files at build time. No backend
-endpoint has been agreed, and none is invented here.
+**The fixture pages still make no request.** Pages 1 and 2 read these files at
+build time, as they always have. Page 3 — the live demo — is the only part of
+the app that calls the backend; see below.
+
+## Page 3 — the live demo
+
+`src/pages/DemoPage.tsx` calls `POST /api/v1/demo/run` and renders the six steps
+the backend returns. It is the only network code in the frontend, and it lives
+in `src/lib/api.ts`.
+
+```sh
+# terminal 1 — backend, with the demo enabled
+cd backend
+DEMO_DATABASE_URL=postgresql+psycopg://USER@localhost:5432/revtrace_test \
+  .venv/bin/uvicorn app.main:app --reload
+
+# terminal 2 — frontend
+cd frontend && npm run dev     # http://localhost:5173
+```
+
+Without `DEMO_DATABASE_URL` the endpoint reports itself disabled and the page
+explains why instead of offering a button that would fail. The demo always rolls
+back; there is no HTTP equivalent of `run_demo.py --commit`.
+
+**Use relative `/api` paths only.** The Vite dev server proxies `/api` to
+`localhost:8000` so the browser sees one origin. That is why the backend has no
+CORS middleware — an absolute `http://localhost:8000` URL would bypass the proxy
+and be refused by the browser.
+
+**Every string on that page comes from the backend.** The page makes claims
+about which code path is production and which response is synthetic, and a
+claim composed in the browser would be one nobody verified.
 
 ## Phase 2 simulator contract
 
@@ -82,8 +114,7 @@ Money arrives as **integer minor units** under `*_minor` keys. Formatting is the
 frontend's job — never do arithmetic on a formatted string, and never introduce
 a float into a money path.
 
-Node 24.19.0 and npm 11.17.0 are available on this machine. npm is the package
-manager — pnpm, yarn, and bun are not installed and are not being added.
+npm is the package manager — no pnpm, yarn or bun lockfile is maintained.
 
 ## Planned views
 

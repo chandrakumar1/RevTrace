@@ -467,9 +467,15 @@ class TestSecurityPosture:
             assert marker not in body
 
     def test_error_bodies_do_not_leak_a_dsn(self, client: TestClient) -> None:
+        """No component of a connection string reaches a client.
+
+        Checked component-wise rather than against a whole DSN: a leak usually
+        arrives as a fragment in a driver's exception text, not as the string
+        anyone configured.
+        """
         response = client.get(f"{API_V1_PREFIX}/risks/{uuid.uuid4()}")
-        assert "postgresql" not in response.text
-        assert "sancha" not in response.text
+        for component in ("postgresql", "psycopg", "localhost", "5432"):
+            assert component not in response.text
 
 
 class TestAuthorityBoundary:

@@ -54,6 +54,9 @@ from app.causal.uplift import DEFAULT_FOLD_COUNT, GLOBAL_CELL, MODEL_VERSION, lo
 from app.models import CaseAssignment, CaseOutcome, Experiment
 from app.models.enums import Quadrant
 
+#: Full basis-point scale, matching every module in `app.causal`.
+BPS_SCALE = 10_000
+
 #: Stamped on every rendering, in the header and in the payload. Results here
 #: come from a generator, and a reader must never have to infer that.
 SYNTHETIC_LABEL = "SYNTHETIC / DEMO EVALUATION"
@@ -105,6 +108,14 @@ LIMITATIONS: tuple[str, ...] = (
     "is now written with 70% characteristic / 30% off-characteristic noise. The model "
     "was never changed to fit the data, but the data was made learnable, and a real "
     "payment stream carries whatever signal it carries.",
+    "The rate/mix split is an accounting identity, not a causal decomposition. The rate "
+    "effect prices the recovery-rate lift at the holdout's mean order value, and "
+    "everything left over is called mix, so that component absorbs genuine composition "
+    "shifts and the single rounding together. No third interaction term is reported; "
+    "carving one out would need a convention nobody has agreed. Where most of the "
+    "incremental figure is mix rather than rate, the result depended on *which* orders "
+    "were recovered as much as on how many, and it need not reproduce under a different "
+    "order distribution.",
 )
 
 #: Limitations that apply only where an uplift model was actually fitted. Kept
@@ -116,14 +127,18 @@ UPLIFT_LIMITATIONS: tuple[str, ...] = (
     "least one is wrong is far above 5%. The Benjamini-Hochberg procedure exists in the "
     "estimator layer and is deliberately not applied to per-cell quadrant decisions; "
     "treat a single cell's interval as indicative, not as a test that survived "
-    "correction.",
+    "correction. The quadrant labels that follow from these intervals are therefore "
+    "operational decisions — they say which cells to act on given what was measured — "
+    "not statistical findings that survived corrected testing.",
     "Sure Thing and Lost Cause are defined as a confidence interval containing zero. At "
     "N=10,000 no cell's interval contains zero, so both quadrants come out empty — the "
     "definition asks for a null result, and a study this size resolves effects a "
     "smaller one would have missed. Distinguishing 'no effect' from 'an effect too "
-    "small to be worth acting on' needs equivalence testing against a margin, which is "
-    "future work. The classifier is unchanged; this is a limit of the definition, not a "
-    "defect in the run.",
+    "small to be worth acting on' needs equivalence testing against a pre-declared "
+    "margin, which is future work. The margin proposed for that work is |uplift| < 50 "
+    "bps; it was not pre-registered for this run and did not determine any result "
+    "reported here. The classifier is unchanged; this is a limit of the definition, not "
+    "a defect in the run.",
     "Quadrant labels are only as sharp as the features. `intentional_churner` and "
     "`expired_or_blocked_card` share the failure code `card_declined`, and no persisted "
     "feature separates them, so the merged cell inherits the blocked-card lift and the "
@@ -848,6 +863,97 @@ def _harm_effect(
 
 
 @dataclass(frozen=True, slots=True)
+class AmountMix:
+    """Incremental recovery split into *more payers* and *different payers*.
+
+    The ledger says how much money the treatment caused. It does not say
+    **why**, and the two available answers have different operational meanings:
+    the treatment recovered more orders at the control arm's typical value, or
+    it recovered a different mix of orders. A lift driven entirely by mix is a
+    lift that may not repeat.
+
+        rate_effect       = round(ate_bps x n_treat x mean_holdout / 10000)
+        amount_mix_effect = incremental_recovered - rate_effect
+
+    `rate_effect` prices the recovery-rate lift at the **control** arm's mean
+    amount, so it answers "what would this many extra recoveries have been worth
+    at the untreated average". Everything the ledger measured beyond that is
+    attributed to mix. There is deliberately **no third interaction term**: with
+    two components defined as a value and a residual, the parts sum to the whole
+    by construction, and a third would have to be carved out of one of them by a
+    convention nobody has agreed.
+
+    **This is an accounting identity over values the estimator already
+    produced.** It re-derives no rate, no amount, and no interval — `ate_bps`,
+    `incremental_recovered` and `mean_holdout` all arrive already computed, and
+    none of them is modified.
+
+    Integer throughout, in minor units, using the same half-up rounding as the
+    ledger and the Qini curve. The single rounding happens once, on the rate
+    component; the residual absorbs it exactly, which is what keeps the
+    invariant true rather than approximately true.
+    """
+
+    rate_effect: int
+    amount_mix_effect: int
+    incremental_recovered: int
+    #: The inputs, carried so the figure can be re-derived by a reader.
+    ate_bps: int
+    n_treatment: int
+    mean_holdout: int
+
+    def __post_init__(self) -> None:
+        total = self.rate_effect + self.amount_mix_effect
+        if total != self.incremental_recovered:
+            raise EvaluationError(
+                f"mix decomposition does not sum to the ledger: "
+                f"{self.rate_effect} + {self.amount_mix_effect} = {total}, "
+                f"but incremental recovered is {self.incremental_recovered}"
+            )
+
+    @property
+    def is_rate_driven(self) -> bool:
+        """Whether more payers explains more of the lift than a changed mix.
+
+        Compared on magnitude: either component may be negative, and a large
+        negative mix effect is as much an explanation as a large positive one.
+        """
+        return abs(self.rate_effect) >= abs(self.amount_mix_effect)
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "rate_effect": self.rate_effect,
+            "amount_mix_effect": self.amount_mix_effect,
+            "incremental_recovered": self.incremental_recovered,
+            "ate_bps": self.ate_bps,
+            "n_treatment": self.n_treatment,
+            "mean_holdout": self.mean_holdout,
+            "is_rate_driven": self.is_rate_driven,
+        }
+
+
+def amount_mix(recovery: RateEffect, ledger: AmountEffect) -> AmountMix:
+    """Split the ledger's incremental figure by rate and by mix.
+
+    Reads `ate_bps` from the rate effect and `n_treatment`, `mean_holdout` and
+    `incremental_recovered` from the ledger. Computes nothing else.
+    """
+    # `round_half_up` already halves away from zero for a negative numerator,
+    # which a negative ATE produces. The denominator is the basis-point scale.
+    rate_component = round_half_up(
+        recovery.ate_bps * ledger.n_treatment * ledger.mean_holdout, BPS_SCALE
+    )
+    return AmountMix(
+        rate_effect=rate_component,
+        amount_mix_effect=ledger.incremental_recovered - rate_component,
+        incremental_recovered=ledger.incremental_recovered,
+        ate_bps=recovery.ate_bps,
+        n_treatment=ledger.n_treatment,
+        mean_holdout=ledger.mean_holdout,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class EvaluationReport:
     """Everything Day 4 can honestly say about one benchmark run."""
 
@@ -867,6 +973,9 @@ class EvaluationReport:
     recovery: RateEffect
     harm: RateEffect
     ledger: AmountEffect
+    #: The ledger's incremental figure, split by rate and by mix. An accounting
+    #: identity over `recovery` and `ledger`; it changes neither.
+    mix: AmountMix
     per_protocol_recovery: RateEffect
     balance: BalanceReport
     truth: GroundTruth
@@ -932,6 +1041,7 @@ class EvaluationReport:
             "recovery": self.recovery.as_dict(),
             "harm": self.harm.as_dict(),
             "ledger": self.ledger.as_dict(),
+            "mix": self.mix.as_dict(),
             "per_protocol": {
                 "recovery": self.per_protocol_recovery.as_dict(),
                 "non_compliance_bps": self.population.per_protocol.non_compliance_bps,
@@ -1033,6 +1143,7 @@ def build_report(
         recovery=recovery,
         harm=harm,
         ledger=ledger,
+        mix=amount_mix(recovery, ledger),
         per_protocol_recovery=per_protocol_recovery,
         balance=report_for_experiment(session, experiment_id),
         truth=ground_truth(session, experiment_id),
@@ -1369,6 +1480,32 @@ def render_markdown(report: EvaluationReport) -> str:
     )
     write("")
 
+    write("### Why the incremental figure moved")
+    write("")
+    write(
+        "The lift split two ways: recoveries the treatment caused, priced at the "
+        "holdout's average order, and everything else — a different mix of orders "
+        "recovered. A lift driven mostly by mix is a lift that may not repeat."
+    )
+    write("")
+    write("| Component | Amount |")
+    write("|---|---|")
+    write(
+        f"| Rate effect — more payers at the holdout average | {_money(report.mix.rate_effect)} |"
+    )
+    write(f"| Mix effect — a different set of orders | {_money(report.mix.amount_mix_effect)} |")
+    write(f"| **Incremental recovered** | **{_money(report.mix.incremental_recovered)}** |")
+    write("")
+    driver = "the recovery-rate lift" if report.mix.is_rate_driven else "a changed order mix"
+    write(
+        f"Most of the movement is explained by {driver}. "
+        f"Computed as `round({_bps(report.mix.ate_bps)} x "
+        f"{report.mix.n_treatment:,} x {_money(report.mix.mean_holdout)})`, with the "
+        "remainder taken as mix — the two sum to the incremental figure exactly, by "
+        "construction rather than by coincidence."
+    )
+    write("")
+
     write("## 5. Primary metric — recovery rate (ITT)")
     write("")
     write("| Quantity | Value |")
@@ -1496,8 +1633,10 @@ __all__ = [
     "SEGMENT_SLEEPING_DOG",
     "SYNTHETIC_LABEL",
     "UPLIFT_LIMITATIONS",
+    "BPS_SCALE",
     "AcceptanceCriterion",
     "AmountCapture",
+    "AmountMix",
     "ConfusionMatrix",
     "EvaluationError",
     "EvaluationReport",
@@ -1509,6 +1648,7 @@ __all__ = [
     "StratumTruth",
     "UpliftReport",
     "acceptance_criteria",
+    "amount_mix",
     "amount_capture",
     "build_report",
     "build_uplift_report",

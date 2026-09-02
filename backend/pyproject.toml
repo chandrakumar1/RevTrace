@@ -22,13 +22,29 @@ dependencies = [
     "pydantic-settings>=2.3",
     "psycopg[binary]>=3.2",
     "python-dotenv>=1.0",
+    # Hypothesis agent. One OpenAI-compatible client serves every provider
+    # (OpenRouter primary, Featherless fallback) — the API shape is the same,
+    # only `base_url`, the model and the schema mode differ.
+    #
+    # Structured output only. No tools are ever declared: the agent has no
+    # filesystem, shell, database or web capability by construction.
+    #
+    # Brings `httpx2` alongside the existing `httpx`. They are separate
+    # distributions and coexist; their types are NOT interchangeable, so an
+    # `httpx.Timeout` must never reach this client.
+    "openai>=3.6,<4",
+    # Phase 8. The official SDK rather than raw HTTP: it carries Razorpay's
+    # own signature-verification primitive, so our HMAC cannot drift from
+    # theirs, and it removes the need to infer request shapes.
+    #
+    # 2.x specifically: 1.4.x imports `pkg_resources`, which Python 3.13 no
+    # longer ships.
+    "razorpay>=2,<3",
 ]
 
 # Deliberately NOT declared yet — these belong to later milestones and
 # declaring them now would pre-commit architectural choices Phase 0 has
 # no mandate to make:
-#   - Razorpay SDK        -> Phase 8 (Razorpay Test Mode integration)
-#   - Gemini / AI SDK     -> Phase 5 (AI diagnosis)
 
 [project.optional-dependencies]
 dev = [
@@ -68,3 +84,11 @@ select = ["E", "F", "I", "UP", "B"]
 python_version = "3.13"
 warn_unused_ignores = true
 warn_return_any = true
+
+# The Razorpay SDK ships no py.typed marker and no stubs. Scoped to that
+# package alone: the untyped surface is confined to
+# `app/integrations/razorpay/`, which is exactly the boundary the adapter
+# exists to hold, and everything past it is typed by our own contracts.
+[[tool.mypy.overrides]]
+module = ["razorpay.*"]
+ignore_missing_imports = true

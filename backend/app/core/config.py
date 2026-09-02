@@ -49,6 +49,22 @@ class Settings(BaseSettings):
     db_pool_size: int = 5
     db_max_overflow: int = 10
 
+    #: Where the browser-facing demo runs. **Empty by default, and empty means
+    #: the demo is off.**
+    #:
+    #: Deliberately a second DSN rather than a reuse of `database_url`. The demo
+    #: writes rows — a merchant, an order, a failed payment attempt, three
+    #: events — and `database_url` names the development database, which must
+    #: never receive them. Requiring a separate, explicitly-set value means a
+    #: deployment that has simply not thought about the demo cannot accidentally
+    #: run one anywhere: the endpoint reports itself disabled instead.
+    #:
+    #: The demo runner refuses `revtrace_dev` and `revtrace_hypothesis_test` by
+    #: name whatever this holds, and rolls its transaction back unconditionally.
+    #: Those are the guarantees; this field only decides whether the demo is
+    #: available at all.
+    demo_database_url: str = ""
+
     # --- Razorpay (Phase 8; empty in Phase 1) ----------------------------
     razorpay_key_id: SecretStr = SecretStr("")
     razorpay_key_secret: SecretStr = SecretStr("")
@@ -56,6 +72,18 @@ class Settings(BaseSettings):
 
     # --- AI (Phase 5; empty in Phase 1) ----------------------------------
     gemini_api_key: SecretStr = SecretStr("")
+
+    #: Read by the hypothesis agent and nothing else. Empty by default, and a
+    #: provider refuses to construct a client without its key rather than
+    #: falling back to an ambient credential — a deliberate run must name its
+    #: own.
+    #:
+    #: OpenRouter is the **only** provider RevTrace calls, on a free model.
+    #: `featherless_api_key` is declared so the paid config has a documented
+    #: shape, but `free_only_chain` never constructs that provider and the
+    #: free-only guard refuses any chain containing it.
+    openrouter_api_key: SecretStr = SecretStr("")
+    featherless_api_key: SecretStr = SecretStr("")
 
     # --- Experiment assignment -------------------------------------------
     #: Decorrelates the assignment hash. Deliberately **not** a secret and
@@ -98,8 +126,40 @@ class Settings(BaseSettings):
         )
 
     @property
+    def razorpay_webhook_configured(self) -> bool:
+        """True when a webhook secret is present, independent of the API keys.
+
+        Separate from `razorpay_configured` because the two capabilities are
+        genuinely independent: a deployment can receive and verify webhooks
+        without holding keys that can move money, and holding those keys says
+        nothing about whether an inbound signature can be checked. Collapsing
+        them would let a missing webhook secret hide behind a configured API
+        key, and the webhook secret is the *only* authentication that endpoint
+        has.
+        """
+        return bool(self.razorpay_webhook_secret.get_secret_value())
+
+    @property
+    def demo_configured(self) -> bool:
+        """True when a demo database has been named. Says nothing about safety.
+
+        Whether that database is *allowed* is a separate question the demo
+        runner answers, because the answer names the refused database and this
+        property has nowhere to put that.
+        """
+        return bool(self.demo_database_url.strip())
+
+    @property
     def gemini_configured(self) -> bool:
         return bool(self.gemini_api_key.get_secret_value())
+
+    @property
+    def openrouter_configured(self) -> bool:
+        return bool(self.openrouter_api_key.get_secret_value())
+
+    @property
+    def featherless_configured(self) -> bool:
+        return bool(self.featherless_api_key.get_secret_value())
 
     @property
     def is_production(self) -> bool:

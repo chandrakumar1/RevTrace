@@ -49,6 +49,18 @@ Flagged when `|SMD| > 0.10`. Verdict: **BALANCED**.
 
 Gross is what a recovery dashboard reports. Credited-not-earned is the part of it that would have arrived anyway.
 
+### Why the incremental figure moved
+
+The lift split two ways: recoveries the treatment caused, priced at the holdout's average order, and everything else — a different mix of orders recovered. A lift driven mostly by mix is a lift that may not repeat.
+
+| Component | Amount |
+|---|---|
+| Rate effect — more payers at the holdout average | Rs 1,388,171.29 |
+| Mix effect — a different set of orders | Rs 3,090,634.76 |
+| **Incremental recovered** | **Rs 4,478,806.05** |
+
+Most of the movement is explained by a changed order mix. Computed as `round(15.64% x 5,044 x Rs 1,759.67)`, with the remainder taken as mix — the two sum to the incremental figure exactly, by construction rather than by coincidence.
+
 ## 5. Primary metric — recovery rate (ITT)
 
 | Quantity | Value |
@@ -245,8 +257,8 @@ The self-recovering stratum is required not to be Persuadable, rather than to ca
 
 These qualify every number in sections 8a-8h.
 
-- Cell-level intervals are nominal 95% and uncorrected for multiplicity. Nine cells are scored per fold and each interval is read on its own, so the chance that at least one is wrong is far above 5%. The Benjamini-Hochberg procedure exists in the estimator layer and is deliberately not applied to per-cell quadrant decisions; treat a single cell's interval as indicative, not as a test that survived correction.
-- Sure Thing and Lost Cause are defined as a confidence interval containing zero. At N=10,000 no cell's interval contains zero, so both quadrants come out empty — the definition asks for a null result, and a study this size resolves effects a smaller one would have missed. Distinguishing 'no effect' from 'an effect too small to be worth acting on' needs equivalence testing against a margin, which is future work. The classifier is unchanged; this is a limit of the definition, not a defect in the run.
+- Cell-level intervals are nominal 95% and uncorrected for multiplicity. Nine cells are scored per fold and each interval is read on its own, so the chance that at least one is wrong is far above 5%. The Benjamini-Hochberg procedure exists in the estimator layer and is deliberately not applied to per-cell quadrant decisions; treat a single cell's interval as indicative, not as a test that survived correction. The quadrant labels that follow from these intervals are therefore operational decisions — they say which cells to act on given what was measured — not statistical findings that survived corrected testing.
+- Sure Thing and Lost Cause are defined as a confidence interval containing zero. At N=10,000 no cell's interval contains zero, so both quadrants come out empty — the definition asks for a null result, and a study this size resolves effects a smaller one would have missed. Distinguishing 'no effect' from 'an effect too small to be worth acting on' needs equivalence testing against a pre-declared margin, which is future work. The margin proposed for that work is |uplift| < 50 bps; it was not pre-registered for this run and did not determine any result reported here. The classifier is unchanged; this is a limit of the definition, not a defect in the run.
 - Quadrant labels are only as sharp as the features. `intentional_churner` and `expired_or_blocked_card` share the failure code `card_declined`, and no persisted feature separates them, so the merged cell inherits the blocked-card lift and the churner is labelled Persuadable against its planted Lost Cause. This is a feature-resolution limit. It would be resolved by a feature that distinguishes the two, never by retuning the model against the answer key.
 - Top-share capture by unit count is not a revenue claim. The top 20% of the ranking holds 38.66% of incremental recoveries but only 26.94% of incremental rupees, so the ranking is better at finding recoveries than at finding valuable ones. Quote the amount-weighted figure whenever the claim is about money.
 
@@ -274,3 +286,4 @@ Listed rather than omitted. A gap a reader can see is a gap.
 - A production holdout costs real money. The sizing calculator quantifies that trade-off; it does not remove it.
 - Interval calibration was checked on 20 independently seeded populations of 2,000 and the true effect fell inside the 95% interval every time. That is no evidence of under-coverage; it is not a demonstration of exact calibration. Twenty trials cannot separate 95% from 99% — under a true 95% rate, a clean sweep is the single most likely outcome (p = 0.36), and the one-sided lower bound on true coverage is only 86%. Reporting it as '100% calibrated' would overstate what was measured.
 - The generator's observable signal was deliberately strengthened after two planted strata proved indistinguishable from the features being persisted: `failure_code` is now written with 70% characteristic / 30% off-characteristic noise. The model was never changed to fit the data, but the data was made learnable, and a real payment stream carries whatever signal it carries.
+- The rate/mix split is an accounting identity, not a causal decomposition. The rate effect prices the recovery-rate lift at the holdout's mean order value, and everything left over is called mix, so that component absorbs genuine composition shifts and the single rounding together. No third interaction term is reported; carving one out would need a convention nobody has agreed. Where most of the incremental figure is mix rather than rate, the result depended on *which* orders were recovered as much as on how many, and it need not reproduce under a different order distribution.

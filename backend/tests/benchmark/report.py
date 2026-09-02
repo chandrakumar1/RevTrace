@@ -61,14 +61,23 @@ def run_benchmark(
     seed: int = BENCHMARK_SEED,
     case_count: int = ACCEPTANCE_CASE_COUNT,
     resamples: int = BOOTSTRAP_RESAMPLES,
+    include_uplift: bool = False,
 ) -> BenchmarkOutcome:
     """Materialise a population and evaluate it.
 
     The two halves stay separate on purpose: `materialise` writes rows and knows
     the generator, `build_report` reads rows and does not.
+
+    `include_uplift` defaults to False, matching `build_report`: fitting the
+    cross-fitted model is the expensive half, and most callers do not want it.
+    A run that writes `docs/` **must** pass True — a report with no uplift
+    renders a strictly smaller document, and overwriting the artifact with one
+    would delete sections rather than refresh them.
     """
     run = materialise(session, seed=seed, case_count=case_count)
-    report = build_report(session, run.experiment_id, resamples=resamples)
+    report = build_report(
+        session, run.experiment_id, resamples=resamples, include_uplift=include_uplift
+    )
     return BenchmarkOutcome(run=run, report=report)
 
 

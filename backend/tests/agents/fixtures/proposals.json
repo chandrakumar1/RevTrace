@@ -1,0 +1,61 @@
+{
+  "_note": "Synthetic recorded responses used for offline tests. These are test fixtures, not captured model outputs. Replace with deliberately recorded API responses only after a real model call is performed and reviewed.",
+  "_provenance": "hand-authored",
+  "_model_target": "claude-opus-5 (the shape these are written against; no response from it has been captured)",
+  "higher_uplift": {
+    "cell_key": "insufficient_funds|upi",
+    "ladder_level": "fine",
+    "claim": "higher_uplift_than_population",
+    "rationale": "This cell shows 1180/4000 recovered treated against 640/4000 holdout, an uplift of 1350 bps with an interval of [900, 1800] that excludes zero and sits entirely above the population effect of 1564 bps at its upper end.",
+    "evidence_cited": ["insufficient_funds|upi", "card_declined|card"]
+  },
+  "lower_uplift": {
+    "cell_key": "card_declined|card",
+    "ladder_level": "fine",
+    "claim": "lower_uplift_than_population",
+    "rationale": "Recovery in the treated arm barely exceeds the holdout arm here, and the interval [200, 800] excludes zero while sitting well below the population effect.",
+    "evidence_cited": ["card_declined|card"]
+  },
+  "no_effect": {
+    "cell_key": "expired_card|card",
+    "ladder_level": "fine",
+    "claim": "no_effect",
+    "rationale": "Treated and holdout recovery rates are close and the interval [-300, 400] spans zero, so this cell looks indistinguishable from no effect.",
+    "evidence_cited": ["expired_card|card"]
+  },
+  "coarse_level": {
+    "cell_key": "insufficient_funds",
+    "ladder_level": "coarse",
+    "claim": "higher_uplift_than_population",
+    "rationale": "Aggregated across payment methods the insufficient-funds cell retains a positive interval that excludes zero.",
+    "evidence_cited": ["insufficient_funds"]
+  },
+  "invented_cell_key": {
+    "cell_key": "fraud_suspected|crypto",
+    "ladder_level": "fine",
+    "claim": "higher_uplift_than_population",
+    "rationale": "A cell the model invented. It appears in no population and must be refused.",
+    "evidence_cited": ["fraud_suspected|crypto"]
+  },
+  "wrong_ladder_level": {
+    "cell_key": "insufficient_funds|upi",
+    "ladder_level": "coarse",
+    "claim": "higher_uplift_than_population",
+    "rationale": "Names a real fine-level cell but asserts the wrong rung.",
+    "evidence_cited": ["insufficient_funds|upi"]
+  },
+  "invented_evidence": {
+    "cell_key": "insufficient_funds|upi",
+    "ladder_level": "fine",
+    "claim": "higher_uplift_than_population",
+    "rationale": "Cites a comparison cell that was never supplied.",
+    "evidence_cited": ["insufficient_funds|upi", "bank_outage|netbanking"]
+  },
+  "blank_rationale": {
+    "cell_key": "insufficient_funds|upi",
+    "ladder_level": "fine",
+    "claim": "higher_uplift_than_population",
+    "rationale": "   ",
+    "evidence_cited": []
+  }
+}

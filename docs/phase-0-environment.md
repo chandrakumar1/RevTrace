@@ -43,8 +43,8 @@ lockfiles, no `node_modules`. A clean slate.
 - No `.vscode/`, no workspace file, no `.editorconfig` (an `.editorconfig` was
   added during Phase 0).
 - `.claude/settings.local.json` contained only a `permissions.allow` list.
-- Git global identity was already configured as
-  `Chandrakumar Sharma <maliav2323@gmail.com>`.
+- Git global identity was already configured, under a different email address
+  from the one associated with the GitHub account (see §6.7).
 
 ## 4. Package managers available
 
@@ -116,18 +116,19 @@ amd64; do not assume arm64.
 
 ### 6.7 Git identity vs. account identity — resolved
 
-The account email (`arlicamalia12121@gmail.com`) differs from the git global
-email. The user confirmed the GitHub account is associated with
-`maliav2323@gmail.com`.
+The email on the local account differed from the one associated with the GitHub
+account, which would have produced commits attributed to the wrong identity.
 
-**Resolution:** repository-local git config set to
-`Chandrakumar Sharma <maliav2323@gmail.com>`.
+**Resolution:** repository-local git config set to the GitHub account's identity.
+The addresses themselves are deliberately not recorded here — this document is
+published, and a personal email address in a public repository is an invitation
+to spam.
 
 ### 6.8 Broad Claude Code read permission — noted, not changed
 
-`.claude/settings.local.json` grants `Read(//Users/sancha/**)`, i.e. the entire
-home directory. Flagged for awareness only; out of Phase 0 scope. The file is
-gitignored as machine-specific.
+`.claude/settings.local.json` granted read access to the entire home directory
+rather than to the repository. Flagged for awareness only; out of Phase 0 scope.
+The file is gitignored as machine-specific.
 
 ## 7. Decisions taken in Phase 0
 
