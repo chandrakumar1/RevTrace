@@ -2,85 +2,150 @@
 
 **Razorpay Buildathon — Track 03: AI Revenue Recovery**
 
-> RevTrace is a revenue recovery system that can prove how much of the money it
-> recovered it actually caused — and that refuses to act when it cannot.
+> A payment fails. We intervene. The customer pays.
+> **Did our intervention actually cause the recovery?**
+
+Most recovery tools answer that question by not asking it. They count every
+rupee that arrives after an action and call it recovered. Many of those
+customers would have paid anyway.
+
+RevTrace measures the difference — and refuses to act when it cannot tell.
+
+---
 
 ## Live
 
 | | |
 |---|---|
-| **Start here** — the overview | <https://revtrace-overview.onrender.com> |
-| **The application** | <https://revtrace-frontend.onrender.com> |
+| **Start here** — the 90-second explanation | <https://revtrace-overview.onrender.com> |
+| **The application** — the real product | <https://revtrace-frontend.onrender.com> |
 | **The API** | <https://revtrace-backend.onrender.com> |
+| **Interactive API docs** | <https://revtrace-backend.onrender.com/docs> |
 | **Source** | <https://github.com/chandrakumar1/RevTrace> |
 
-The overview explains the idea in about ninety seconds. The application is the
-thing itself: the full ledger and evaluation, plus a synthetic recovery you can
-run end to end in the browser.
+**Start with the Overview** if you want the idea before the machinery.
+**Open the Application** to inspect the real product and run the synthetic demo.
 
-All three are hosted on Render's free tier, which sleeps when idle — the first
-request after a quiet period can take up to a minute to wake. The overview and
-the application's first two pages are static and unaffected; only the live demo
-waits on the API.
+> All services are on Render's free tier and sleep when idle — the first request
+> after a quiet period can take up to a minute to wake. The overview and the
+> application's first two pages are static and unaffected; only the live demo
+> waits on the API.
 
-**Every figure on every one of them is synthetic.** No real Razorpay transaction
-has ever been processed — see [§2](#2-demo--synthetic--offline).
+## Judge flow
+
+Five steps, nothing to install.
+
+| # | Where | What to look for |
+|---|---|---|
+| 1 | [**Overview**](https://revtrace-overview.onrender.com) | The problem, the experiment, and why abstention matters — in about ninety seconds. |
+| 2 | [**Application**](https://revtrace-frontend.onrender.com) | The product itself. Three pages. |
+| 3 | **Incrementality Ledger** (opens here) | Gross recovered, incremental recovered, and **credited-not-earned** — the gap, which is the money a conventional dashboard would have claimed. That gap is the pitch. |
+| 4 | **Evaluation** | Cross-fitted uplift, Qini, quadrant labels — beside a limitations section carrying equal weight. An undefined Qini coefficient renders as `undefined`, never as `0`. |
+| 5 | **Live demo → ▶ Run Demo** | Six steps. Watch the payment advance `failed → captured`, the replay change nothing, and two attacks get refused. |
+
+The closing line is on screen: *Rolled back — nothing persisted.*
+
+Localhost is **not** required to review this project. Local setup is documented
+under [Local development](#local-development) for contributors.
 
 ---
 
-## 1. What RevTrace is, in plain terms
+## What RevTrace is
 
-When a payment fails, most recovery tools ask *"can we get this money back?"* and
-then take credit for every rupee that arrives afterwards. Many of those customers
-would have retried on their own. The tool did nothing, and billed for it.
+When a payment fails and you intervene, and the customer then pays, you have not
+learned that you caused the payment. You have learned that both things happened.
 
-RevTrace asks a harder question: **is recovery worth attempting on this payment,
-and can we prove the attempt is what made the difference?**
+RevTrace splits recovered revenue into two very different quantities:
 
-Three ideas carry the whole system.
+- **Incremental** — caused by the intervention. Defensible.
+- **Credited, not earned** — would have arrived anyway. The part a conventional
+  recovery dashboard silently keeps.
 
-**Deterministic code owns the money.** Every revenue figure, risk score, uplift
-estimate, policy decision and execution authorisation is computed by ordinary,
-tested, integer arithmetic. No language model is anywhere near those numbers.
+That split is only possible because a **randomised holdout** is kept. Every case
+is assigned to treatment or holdout by `sha256(risk_id : experiment_id : salt)`,
+so an auditor can recompute any unit's arm from stored values alone. Nothing is
+drawn at run time. The holdout is never contacted, so what happens to it is what
+would have happened anyway.
 
-**Recovery is measured against a randomised holdout.** Every case is assigned to
-treatment or control by `sha256(risk_id : experiment_id : salt)`, so an auditor
-can recompute any unit's arm from stored values alone. That holdout is what makes
-"we caused this" a measurable claim instead of a marketing one.
+## Why it is different
 
-**Not acting is a valid answer.** When the estimated uplift interval contains
-zero, or the customer was likely to self-recover, RevTrace **abstains** and
-records why. Contacting a customer who would have paid anyway costs money and
-goodwill, and the system treats that as a real cost rather than a free upside.
+**1. Deterministic code owns the numbers.**
+Every revenue figure, risk score, uplift estimate, policy decision and execution
+authorisation is ordinary, tested, integer arithmetic. Money is carried as
+integer minor units and rates as integer basis points; no floating-point
+arithmetic touches a money or probability path on either side of the wire.
 
-Around this sits a payment-provider boundary — the Razorpay adapter, webhook
-verification, and merchant attribution — built so that a verified webhook can
-move a payment's state and nothing else can.
+**2. A holdout provides the counterfactual.**
+Intention-to-treat: a case stays in the arm it was assigned to even when
+execution failed. The denominator is fixed at randomisation.
 
-## 2. DEMO / SYNTHETIC / OFFLINE
+**3. Abstention is a valid outcome.**
+When the estimated uplift interval contains zero, or the customer was likely to
+self-recover, RevTrace **declines to act** and records which named reason
+applied. Contacting someone who would have paid anyway costs money and goodwill,
+and the system treats that as a real cost rather than a free upside.
 
-**Read this before interpreting any number in this repository.**
+**4. AI is advisory, and holds no authority.**
+
+> **AI explains the evidence. It does not rewrite the evidence.**
+
+The model proposes falsifiable hypotheses and cites the integers it relies on.
+Deterministic code then checks every cited integer against the computed values
+before anything is believed. A model that invents a number is caught by
+arithmetic, not by trust.
+
+---
+
+## Synthetic / offline — read this before interpreting any number
 
 - **No real Razorpay transaction has ever been processed by this system.**
-- **No real customer data. No real payment. No real money.**
-- **No external provider dependency is required to run the demo** — it works
-  with an empty `.env`, no credentials, and no network access.
-- The payment-provider responses in the demo come from a **deterministic
-  synthetic provider** that implements the adapter's interface offline.
-- Every metric in this repository is measured against **simulator-generated
-  data with planted effects**. Recovering a planted effect validates the
-  estimator; it says nothing about the world.
+- **No real customer data, no real payment, no real money.**
+- The demo's provider responses come from a **deterministic synthetic offline
+  provider**. No credential is read and no socket is opened.
+- Every metric here is a **synthetic/demo measurement** against a generated
+  population with **planted effects**. Recovering a planted effect validates the
+  estimator, not the world.
+- The **live browser demo makes no model call.**
+- **This should not be read as production-ready.** See
+  [Limitations](#limitations).
+
+What *is* real, and worth being precise about: the HMAC-SHA256 signature
+verification, merchant derivation, idempotency constraint, ordering rules and
+payment state machine are **production code**, exercised by the demo rather than
+simulated by it. Only the bytes and the secret are synthetic.
 
 Every synthetic artifact carries a `DEMO` marker, and the provenance string
 `DEMO / SYNTHETIC / OFFLINE — not a Razorpay transaction` travels with the data
 so a screenshot cannot be mistaken for a capture.
 
-What *is* real, and worth being precise about: the HMAC-SHA256 signature
-verification, the merchant derivation, the idempotency constraint, the ordering
-rules and the payment state machine are **production code**, exercised by the
-demo rather than simulated by it. Only the bytes and the secret are synthetic.
+---
 
-## 3. Architecture
+## The demo, exactly
+
+One click runs this end to end. Every step is a real call into the code named.
+
+| # | Step | What runs |
+|---|---|---|
+| 1 | Synthetic failed payment | A `DEMO`-marked merchant, customer, order and **failed** payment attempt — the recovery opportunity |
+| 2 | Recovery link | `payment_links.build_request` + `create_payment_link` — **production code** |
+| 3 | Synthetic provider response | `DemoPaymentLinkClient`, implementing the SDK's own surface, **offline** |
+| 4 | Signed synthetic webhooks | Three deliveries, each signed with a genuine **HMAC-SHA256 over the exact bytes to be delivered** |
+| 5 | HMAC verification | Raw bytes verified before anything parses them |
+| 6 | Merchant derivation | `payment_attempts → orders → merchant_id`, from the **signed** payment id |
+| 7 | Event mapping | `payment.failed → payment.failed`, `payment.captured → payment.captured`, **`payment_link.paid → order.paid`** |
+| 8 | Payment state | The attempt advances **`failed → captured`**, forward only |
+| 9 | Replay | The same three delivered again — duplicate detected, row count unchanged |
+| 10 | Tampered webhook | **REFUSED** |
+| 11 | Foreign-merchant webhook | **REFUSED** |
+| 12 | Rollback | *Rolled back — nothing persisted.* |
+
+Steps 10 and 11 are **successes**, and the UI renders them that way. They are
+security controls doing their job; showing them as errors would invert what the
+demo exists to prove.
+
+---
+
+## Architecture
 
 A clean modular monolith. No microservices.
 
@@ -120,96 +185,77 @@ A clean modular monolith. No microservices.
      revtrace_dev  ·  revtrace_test  ·  revtrace_hypothesis_test
 ```
 
-### `overview/` — the showcase, and why it is separate
+### The application — `frontend/`
 
-`overview/` is a public storytelling site, not part of the application UI. It
-shares nothing with `frontend/`: no components, no design system, no build, no
-imports in either direction. It makes **no API call at all** — every figure it
-shows is compiled in from its own local evidence module, transcribed from the
-generated artifacts with the artifact path recorded beside each value.
+Three pages, and only three:
 
-That independence is deliberate. The showcase must render when the API is
-asleep, and the application must not acquire a dependency on marketing copy. The
-two live in one repository and deploy as two separate sites.
+| Page | Reads |
+|---|---|
+| **Incrementality Ledger** | Committed fixture, build time. No request. |
+| **Evaluation** | Committed fixture, build time. No request. |
+| **Live Demo** | Calls the API — but only when you press **Run Demo**. |
+
+No charting library. The visualisations are laid out with CSS from the report
+payload; every visible number comes from the backend through a formatter, and
+nothing on screen is derived from layout geometry.
+
+### The showcase — `overview/`, and why it is separate
+
+`overview/` is a **public project-introduction site, not part of the application
+UI.** It exists to explain the idea before a reviewer opens the real product,
+and then to hand them the link.
+
+It has its own React/Vite app, its own design system, and its own build. It
+shares **no components** with `frontend/`, has **no imports in either
+direction**, makes **no API calls**, and **does not depend on the backend** —
+every figure it shows is compiled in from its own local evidence module,
+transcribed from the generated artifacts with the artifact path recorded beside
+each value.
+
+That independence is deliberate: the showcase must render when the API is
+asleep, and the application must not acquire a dependency on explanatory copy.
+The two live in this repository and **deploy as two separate Render sites**.
 
 ### The causal / decision layer
 
 `causal/` and `engine/` own every number. A five-fold cross-fitted T-learner over
 empirical cell rates produces per-cell uplift with confidence intervals; the
 policy engine turns those into one of a small set of decisions — act, abstain
-with a named reason, or escalate. Money is carried as **integer minor units** and
-rates as **integer basis points** throughout; no floating-point arithmetic
-touches a money or probability path on either side of the wire (ADR 0001).
-
-### The hypothesis / AI layer
-
-`agents/hypothesis_agent.py` is the only component that talks to a language
-model, and it holds no authority. It reads a structured evidence bundle,
-proposes a falsifiable hypothesis about a cell, and cites integers. Deterministic
-code then **checks every cited integer against the computed values** and marks
-the hypothesis confirmed, refuted, or unsupported. A model that invents a number
-is caught by arithmetic, not by trust.
+with a named reason, or escalate.
 
 ### The Razorpay adapter
 
-All provider code lives in `app/integrations/razorpay/` and nothing outside that
+All provider code lives in `app/integrations/razorpay/`, and nothing outside that
 package sees a Razorpay request or response shape. `mapper.py` is the single
 place a provider event name becomes a RevTrace `EventType` — an unmapped event is
 **refused, never guessed**, because a timeline is evidence.
 
-### Webhook verification
+---
 
-Raw bytes in, signature checked, *then* parsed. The owning merchant is derived
-from the signed payment id, never from the caller. See [Security](#5-security).
-
-### Database separation
-
-Three databases with three different jobs — see [Databases](#7-databases).
-
-## 4. The demo flow, exactly
-
-One click runs this end to end. Every arrow is a real call into the code named.
-
-| # | Step | What actually runs |
-|---|---|---|
-| 1 | Synthetic failed payment | A `DEMO`-marked merchant, customer, order and **failed** payment attempt — the recovery opportunity |
-| 2 | Recovery decision → payment-link adapter interface | `payment_links.build_request` + `create_payment_link` — **production code** |
-| 3 | Synthetic provider response | `DemoPaymentLinkClient`, implementing the SDK's `payment_link.create` surface **offline** |
-| 4 | Signed synthetic webhooks | Three deliveries, each signed with a genuine **HMAC-SHA256 over the exact bytes to be delivered** |
-| 5 | HMAC verification | `verify_signature` over raw bytes, before any parsing |
-| 6 | Merchant derivation | `payment_attempts → orders → merchant_id`, reached from the **signed** payment id |
-| 7 | Event mapping + persistence | `payment.failed → payment.failed`, `payment.captured → payment.captured`, **`payment_link.paid → order.paid`** |
-| 8 | Payment state update | The attempt advances `failed → captured`, forward only |
-| 9 | Duplicate webhook rejection | The same three delivered again — `duplicate detected`, row count unchanged |
-| 10 | Tampered webhook rejection | The amount altered after signing — **REFUSED** |
-| 11 | Foreign merchant rejection | Another merchant claims the payment — **REFUSED** |
-| 12 | Rollback | `Rolled back — nothing persisted.` |
-
-Steps 10 and 11 are **successes**, and the UI renders them that way. They are
-security controls doing their job, and showing them as errors would invert what
-the demo exists to prove.
-
-## 5. Security
+## Security
 
 **Raw bytes are verified before JSON parsing.** Razorpay signs the exact octets
 it sent; a parsed-then-re-serialised body is different octets. The route reads
-`await request.body()`, verifies, and only then calls `json.loads`.
+the raw body, verifies, and only then parses.
 
 **HMAC-SHA256, timing-safe.** Verification goes through the official SDK's
 `verify_webhook_signature`, which compares with `hmac.compare_digest`. The
 verifier returns `None` on success and **raises on every failure**, so a caller
 cannot mistake a falsy return for a pass.
 
-**Merchant identity is derived from signed data.** The owning merchant is reached
-through `PaymentAttempt → Order → merchant_id` from the signed payment id.
+**Merchant ownership is derived from signed data.** The owning merchant is
+reached through `PaymentAttempt → Order → merchant_id`, from the signed payment
+id.
 
-**`merchant_id` is an assertion, not a selection.** The optional query parameter
+**`merchant_id` is an assertion, not a selector.** The optional query parameter
 is checked *against* the derivation and can only cause a rejection. This was a
-real, demonstrated defect: when the parameter was authoritative, a validly-signed
-webhook about one merchant's payment could be filed under another, pointing at
-the victim's order and advancing the victim's payment attempt. Existence-checking
-the merchant caught none of it, because the merchant existed — it simply was not
-the one that owned the payment. Fixed, and regression-tested.
+real, demonstrated defect: when the parameter was authoritative, a
+validly-signed webhook about one merchant's payment could be filed under
+another, pointing at the victim's order and advancing the victim's payment
+attempt. Existence-checking the merchant caught none of it, because the merchant
+existed — it simply was not the one that owned the payment. **Found, fixed, and
+regression-tested**; the attack is now part of the suite and is visible in the
+live demo.
 
 **Idempotency is a database constraint, not a code path.**
 `UNIQUE(merchant_id, external_event_id)` means a duplicate delivery is an insert
@@ -231,95 +277,86 @@ and they are empty in this repository regardless.
 
 **Authentication is out of scope for this demo.** There is no key, token, or
 session on the feature endpoints; the webhook route's HMAC is the only
-authentication in the system. Bind to localhost. This is a documented boundary,
-not an oversight — see [Limitations](#11-limitations).
+authentication in the system. This is a documented boundary, not an oversight.
 
-## 6. AI, and what it is not allowed to do
+---
+
+## AI, and what it is not allowed to do
 
 RevTrace uses exactly one model, on a **free-only provider lock**:
 
 | | |
 |---|---|
-| Provider | OpenRouter — the only provider ever constructed |
+| Provider | **OpenRouter** — the only provider ever constructed |
 | Model | `nvidia/nemotron-3-super-120b-a12b:free` |
 | Fallback | **None.** Zero paid-model fallback, by construction |
 
-The lock is fail-closed. Whether a provider is free is an explicit declaration
-that **defaults to false**; the `:free` suffix only corroborates it and never
-infers it. `free_only_chain()` is the only production constructor, and it refuses
-at construction time rather than at call time — a 429 on a free model is exactly
-when a naive chain would silently fail over to a paid one.
+The lock is fail-closed: whether a provider is free is an explicit declaration
+that **defaults to false**, and the `:free` suffix only corroborates it, never
+infers it. The free-only chain refuses at construction time rather than at call
+time — a 429 on a free model is exactly when a naive chain would silently fail
+over to a paid one.
 
-**The model's live result, stated accurately.** One live call succeeded. It
-proposed a hypothesis about the cell `card_declined|card` — claim
-`higher_uplift_than_population` — and cited eleven integers. Deterministic code
-then checked all eleven against the computed cell statistics: **all eleven
-matched, status `confirmed`.** No value was fabricated.
+**The live result, stated accurately.** One live call succeeded. It proposed a
+hypothesis about the cell `card_declined|card` — claim
+`higher_uplift_than_population`, rule
+`interval_lies_entirely_above_the_population_effect` — and deterministic code
+returned a verdict of `confirmed`.
 
-Three subsequent live calls failed, and are reported as failures rather than
+**That run was rolled back and never persisted.** No audit row exists in any
+database, so the numeric detail of the capture — including how many cited
+integers were checked — is **not available as evidence** and is not reconstructed
+anywhere in this project. The classification above is what survives.
+
+Three subsequent live calls failed and are reported as failures rather than
 retried into a success: one returned empty content, one returned a 200 whose body
-carried an error and no choices, and one was a `502 Upstream error`. Each
-produced a diagnostic improvement. **Whether the full 45-cell payload is viable
-within the 2,048-token budget remains unknown** — the 502 never reached the
-model.
+carried an error and no choices, and one was a `502 Upstream error`. Whether the
+full payload is viable within the token budget **remains unknown** — the 502
+never reached the model.
 
 **None of this is required for the demo.** The browser demo makes no model call.
 
-## 7. Databases
+---
+
+## Databases
 
 Three databases, three jobs. The separation is enforced in code, not by
 convention.
 
-| Database | Role | Rule |
-|---|---|---|
-| `revtrace_test` | Ephemeral test **and demo** database | Every test and the demo run inside a transaction that is **always rolled back**. No row survives. The harness never drops, truncates or recreates anything. |
-| `revtrace_hypothesis_test` | Persistent **canonical benchmark** population | The materialised N=10,000 experiment every measured claim rests on. Read-only for everything else; the demo refuses it **by name**. |
-| `revtrace_dev` | The application database | What `DATABASE_URL` names and what `uvicorn` serves. The test suite and the demo both refuse it by name; no test has ever written to it. |
+| Database | Role |
+|---|---|
+| `revtrace_test` | **Ephemeral** test and demo database. Every test and the demo run inside a transaction that is always rolled back; no row survives. |
+| `revtrace_hypothesis_test` | The **persistent canonical benchmark** population that measured claims rest on. Read-only for everything else; the demo refuses it by name. |
+| `revtrace_dev` | The **application database** — what `DATABASE_URL` names locally. The test suite and the demo both refuse it by name. |
 
-`DEMO_DATABASE_URL` is a **separate setting from `DATABASE_URL`**, and it is
-empty by default — the demo endpoint reports itself disabled rather than choosing
-a database on its own. `revtrace_dev` and `revtrace_hypothesis_test` are refused
-whatever it holds, and there is **no HTTP equivalent of `run_demo.py --commit`**:
+`DEMO_DATABASE_URL` is a **separate setting from `DATABASE_URL`**, empty by
+default — the demo endpoint reports itself disabled rather than choosing a
+database on its own. There is **no HTTP equivalent of `run_demo.py --commit`**:
 the endpoint takes no such parameter and rolls back in a `finally`.
 
-No connection string, username or password appears anywhere in this repository.
-Every documented DSN uses placeholders.
+---
 
-## 8. Verified test results
+## Verified test results
 
 Measured on the current tree:
 
 | Check | Result |
 |---|---|
-| **Full test suite** | **4,604 passed · 0 failed · 0 skipped** (11m 31s) |
-| Integration-adapter suite (`tests/integrations`) | 208 passed |
+| **Full test suite** | **4,604 passed · 0 failed · 0 skipped** |
 | `ruff check` | clean |
-| `ruff format --check` | clean, 223 files |
-| `mypy app` | Success — 114 source files |
+| `ruff format --check` | clean |
+| `mypy app` | clean |
 | Frontend `npm run typecheck` | clean |
 | Frontend `npm run build` | clean |
 
 Nothing is skipped, and no test is marked expected-to-fail.
 
-## 8a. Four ways to look at this
+---
 
-They need very different things from you, and it is worth knowing which one you
-are in before something appears not to work.
+## Local development
 
-| | Needs a backend? | Needs a database? |
-|---|---|---|
-| **The overview site** — the public showcase | **No.** Never calls one | No |
-| **Static pages** — the ledger and the evaluation | **No.** Committed fixtures, read at build time | No |
-| **Interactive synthetic demo** — the *Live demo* page | Yes, but only when you press **Run Demo** | Yes, a throwaway one |
-| **Full local setup** — the API, `/docs`, the whole suite | Yes | Yes |
-| **Benchmark reproduction** — regenerating the evaluation | No server; a script | Yes, a test database |
-
-Pages 1 and 2 render with the backend switched off, and a deployed site loads
-its static content without the API being awake. Only the live demo calls it, and
-only on an explicit click — if the backend is asleep or unreachable the page says
-so and the rest of the site is unaffected.
-
-## 9. Running it locally
+**Not required to review this project** — the deployed links above are the
+intended path. This section is for contributors.
 
 Replace `USER` with your PostgreSQL role. Nothing below needs a credential of any
 kind — no Razorpay key, no AI key.
@@ -328,7 +365,7 @@ kind — no Razorpay key, no AI key.
 
 | Tool | Required |
 |---|---|
-| Python | **3.13.x** (pinned in `backend/.python-version`) |
+| Python | **3.13.x** (pinned in `backend/.python-version`; `pyproject.toml` requires `>=3.13,<3.14`) |
 | Node | 20.19+ |
 | npm | 10+ |
 | PostgreSQL | 16 |
@@ -359,41 +396,42 @@ DATABASE_URL=postgresql+psycopg://USER@localhost:5432/revtrace_test \
 cd ../frontend && npm install
 ```
 
-### Run the backend
+### Run the application
 
 ```bash
+# terminal 1 — backend, with the demo enabled
 cd backend
 DEMO_DATABASE_URL=postgresql+psycopg://USER@localhost:5432/revtrace_test \
     .venv/bin/uvicorn app.main:app --reload      # http://127.0.0.1:8000/docs
+
+# terminal 2 — the application
+cd frontend && npm run dev                        # http://localhost:5173
 ```
 
-Without `DEMO_DATABASE_URL` everything still runs; only the demo endpoint reports
-itself disabled.
+Without `DEMO_DATABASE_URL` everything still runs; only the demo endpoint
+reports itself disabled. The Vite dev server proxies `/api` to `localhost:8000`,
+so the browser sees a single origin and the backend needs no CORS middleware.
 
-### Run the frontend
+### Run the showcase site
 
 ```bash
-cd frontend
+cd overview
+npm install
 npm run dev                                       # http://localhost:5173
 ```
 
-### The offline demo — terminal
+It has its own `package.json` and lockfile; installing here does not touch
+`frontend/`.
 
-No server needed, no credentials, nothing kept:
+### The offline demo, in a terminal
+
+No server, no credentials, nothing kept:
 
 ```bash
 cd backend
 TEST_DATABASE_URL=postgresql+psycopg://USER@localhost:5432/revtrace_test \
     .venv/bin/python run_demo.py
 ```
-
-### The offline demo — browser
-
-Start the backend and frontend as above, open **http://localhost:5173**, and
-click **Live demo → ▶ Run Demo**.
-
-The Vite dev server proxies `/api` to `localhost:8000`, so the browser sees a
-single origin and the backend needs no CORS middleware.
 
 ### The evaluation benchmark
 
@@ -403,21 +441,27 @@ TEST_DATABASE_URL=postgresql+psycopg://USER@localhost:5432/revtrace_test \
     .venv/bin/python run_acceptance.py
 ```
 
-Materialises ~70,000 rows inside one transaction and rolls back in a `finally`.
-It writes exactly two files — `docs/EVALUATION.md` and `docs/evaluation.json` —
-and touches nothing else.
+Materialises the population inside one transaction and rolls back in a
+`finally`. It writes exactly two files — `docs/EVALUATION.md` and
+`docs/evaluation.json` — and touches nothing else.
 
-### Tests
+### Tests and checks
 
 ```bash
 cd backend
 .venv/bin/python -m pytest              # everything
 .venv/bin/python -m pytest -m "not db"  # hermetic only; no PostgreSQL needed
+.venv/bin/ruff check app tests ../simulator
+.venv/bin/mypy app
+
+cd ../frontend && npm run typecheck && npm run build
 ```
 
-## 10. How it is deployed
+---
 
-Three separate Render services, plus a hosted PostgreSQL instance:
+## Deployment
+
+Three separate Render services, plus a managed PostgreSQL instance:
 
 | Component | Source | URL |
 |---|---|---|
@@ -426,18 +470,14 @@ Three separate Render services, plus a hosted PostgreSQL instance:
 | API | `backend/` | <https://revtrace-backend.onrender.com> |
 | PostgreSQL | — | managed, not public |
 
-`overview/` and `frontend/` are independent static builds from the same
-repository and deploy as separate sites. The overview never calls the API, so it
-is unaffected by the backend's state.
+`overview/` and `frontend/` are independent static builds from this repository
+and deploy as separate sites. The overview never calls the API, so it is
+unaffected by the backend's state.
 
-Everything below is what makes that work, and what breaks it.
-
-**A cloud backend cannot reach your laptop's PostgreSQL.** `localhost:5432` on
+**A cloud backend cannot reach a laptop's PostgreSQL.** `localhost:5432` on
 Render means *Render's* localhost, where nothing is listening. The database must
-be a hosted instance with a public connection string, supplied to the backend as
-`DATABASE_URL`. This is the single most common way this deployment fails.
-
-Three more things that are easy to get wrong:
+be a hosted instance with a connection string supplied as `DATABASE_URL`. This
+is the single most common way this deployment fails.
 
 **The Vite proxy is development-only.** `server.proxy` exists in the dev server
 and is absent from a production build, so a deployed frontend must be told where
@@ -448,39 +488,38 @@ the API is. Two supported ways:
 | **Absolute API URL** | `VITE_API_BASE_URL=https://revtrace-backend.onrender.com` | `FRONTEND_ORIGIN=https://revtrace-frontend.onrender.com` |
 | **Same-origin rewrite** | leave `VITE_API_BASE_URL` unset; add a host rewrite from `/api/*` to the backend | leave `FRONTEND_ORIGIN` unset |
 
-The first is explicit and works on any static host. The second keeps the
-single-origin property, so no CORS is involved at all. **Do not do both** — a
-rewrite plus an absolute URL sends requests somewhere neither was configured
-for.
+**Do not do both** — a rewrite plus an absolute URL sends requests somewhere
+neither was configured for.
 
 `VITE_API_BASE_URL` is read at **build** time, not run time: changing it means
 rebuilding. It is inlined into readable JavaScript, so it must never hold a
 secret.
 
 **`FRONTEND_ORIGIN` is one origin, and empty means no CORS middleware at all.**
-Scheme and host with no path and no trailing slash — the backend refuses a
-malformed value at startup rather than letting it fail as an opaque browser
-error. Credentials are never enabled; there is no cookie or token to send.
+Scheme and host, no path and no trailing slash — the backend refuses a malformed
+value at startup rather than letting it fail as an opaque browser error.
+Credentials are never enabled; there is no cookie or token to send.
 
 **Run the migrations against the hosted database** before first boot:
-`alembic upgrade head` with `DATABASE_URL` set to the hosted DSN. The current
-head is `9c41e07b2d58`.
+`alembic upgrade head` with `DATABASE_URL` set to the hosted DSN.
 
 **Decide deliberately whether the demo endpoint is enabled.** Leaving
-`DEMO_DATABASE_URL` unset disables it. If you do enable it, point it at a
-throwaway database — never at the one `DATABASE_URL` names.
+`DEMO_DATABASE_URL` unset disables it. If enabled, point it at a throwaway
+database — never at the one `DATABASE_URL` names.
 
-Set `APP_ENV=production` to disable `/docs` and `/redoc`.
+`APP_ENV=production` disables `/docs` and `/redoc`.
 
-## 11. Limitations
+---
+
+## Limitations
 
 Stated plainly, because a system that claims to prove things has to be honest
 about what it has not proven.
 
 - **Razorpay has never processed a transaction for this system.** The adapter is
-  written against the official SDK and the official documentation, and it has
-  been exercised only against a synthetic offline provider. Test Mode
-  integration is prepared, not performed.
+  written against the official SDK and documentation, and has been exercised only
+  against a synthetic offline provider. Test Mode integration is prepared, not
+  performed.
 - **All provider responses in the demo are synthetic**, produced by
   `DemoPaymentLinkClient`. They are shaped like real ones and are not real ones.
 - **Every metric is a synthetic/demo measurement.** The planted effects are
@@ -497,56 +536,17 @@ about what it has not proven.
   rotation, backups, monitoring and alerting, and a real Test Mode integration
   before any Live Mode conversation.
 
-## 12. Judge's demo script
-
-Two minutes, nothing to install.
-
-**Start:** <https://revtrace-overview.onrender.com> — about ninety seconds, and
-it explains the idea before you see any of the machinery.
-
-**Then:** <https://revtrace-frontend.onrender.com> — the application itself, and
-the four steps below.
-
-Both are on Render's free tier and sleep when idle; the first load after a quiet
-period can take up to a minute. Running it on your own machine instead is
-[§9](#9-running-it-locally) — that is the development path, not the way in.
-
-| # | Click | What to look for |
-|---|---|---|
-| 1 | **Incrementality ledger** (opens here) | Three figures. Gross recovered, incremental recovered, and **credited-not-earned** — the gap, which is the money a conventional dashboard would have claimed. That gap is the pitch. |
-| 2 | **Evaluation** | Cross-fitted uplift, the Qini curve, quadrant labels — and a limitations section carrying equal weight. Note that an undefined Qini coefficient renders as `undefined`, never as `0`. |
-| 3 | **Live demo → ▶ Run Demo** | Six steps appear. Watch step 4: the payment attempt advances `failed → captured`. Watch step 5: the same webhooks delivered again change nothing. |
-| 4 | **Scroll to step 6** | Two attacks, both **REFUSED**, both green. A tampered body and a cross-tenant webhook. The second was a real defect that was found and fixed. |
-
-**The closing line is on screen:** *Rolled back — nothing persisted.*
-
-Three things worth asking about:
-
-- *"Is any of this real?"* — No, and the page says so before you press anything.
-  The provider response and the webhook secret are synthetic. The signature
-  verification, merchant derivation, idempotency and state machine are production
-  code.
-- *"What happens when it isn't sure?"* — It abstains, and records which of twelve
-  named reasons applied. Not acting is a first-class outcome.
-- *"What does the AI decide?"* — Nothing. It proposes a hypothesis and cites
-  integers; deterministic code checks every one against the computed values.
+---
 
 ## Repository layout
 
 ```
-.
+RevTrace/
 ├── README.md              This file
 ├── CLAUDE.md              Working agreement for coding agents
 ├── .env.example           Environment template — no values, ever
-├── docs/
-│   ├── architecture.md    What was actually built, and why
-│   ├── EVALUATION.md      Generated evaluation (synthetic/demo)
-│   ├── evaluation.json    The same report as structured data
-│   ├── gate_comparison.json   Gate/spend figures, kept separate from causal
-│   ├── EXPERIMENT_DESIGN.md   Pre-registration — not amended after the fact
-│   ├── BREAKAGE.md        What actually broke, in order, with costs
-│   ├── contracts/         API and fixture contracts
-│   └── decisions/         ADRs
+├── overview/              The public showcase — separate site, no API calls
+├── frontend/              The application — React 19 · Vite 7 · Tailwind 4
 ├── backend/
 │   ├── run_acceptance.py  The evaluation benchmark
 │   ├── run_demo.py        The offline demo, in a terminal
@@ -567,23 +567,39 @@ Three things worth asking about:
 │   │   ├── agents/        hypothesis_agent — advisory only
 │   │   ├── integrations/  razorpay/ — the provider boundary
 │   │   └── db/            Session and engine setup
-│   ├── alembic/           Migrations (head: 9c41e07b2d58)
+│   ├── alembic/           Migrations
 │   └── tests/             4,604 tests, plus the benchmark harness
-├── frontend/              The application — React 19 · Vite 7 · Tailwind 4
-├── overview/              The public showcase — separate site, no API calls
-└── simulator/             Synthetic event generator, potential outcomes
+├── simulator/             Synthetic event generator, potential outcomes
+└── docs/
+    ├── architecture.md    What was actually built, and why
+    ├── EVALUATION.md      Generated evaluation (synthetic/demo)
+    ├── evaluation.json    The same report as structured data
+    ├── gate_comparison.json   Gate/spend figures, kept separate from causal
+    ├── EXPERIMENT_DESIGN.md   Pre-registration — not amended after the fact
+    ├── BREAKAGE.md        What actually broke, in order, with costs
+    ├── contracts/         API and fixture contracts
+    └── decisions/         ADRs
 ```
 
-The frontend has **no charting library**. Its visualisations are laid out with
-CSS from the report payload; every visible number comes from the backend through
-a formatter, and nothing on screen is derived from layout geometry.
+---
 
 ## Measurement honesty
 
-`docs/EVALUATION.md` carries its own limitations section and is the authoritative
-source for every figure. **This README deliberately quotes no result from it** —
-one number in two places is one number that will drift.
+[`docs/EVALUATION.md`](docs/EVALUATION.md) carries its own limitations section
+and is the authoritative source for every figure. **This README deliberately
+quotes no result from it** — one number in two places is one number that will
+drift.
 
-Scoring formulas are documented and tested. None is presented as a scientifically
-validated prediction, and two tests enforce that the synthetic/demo labelling
-stays in place.
+Scoring formulas are documented and tested. None is presented as a
+scientifically validated prediction, and tests enforce that the synthetic/demo
+labelling stays in place.
+
+Further reading:
+
+| Document | What it is |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | What was actually built, and why it diverged where it did |
+| [`docs/EXPERIMENT_DESIGN.md`](docs/EXPERIMENT_DESIGN.md) | The pre-registration, frozen before the run and never amended |
+| [`docs/EVALUATION.md`](docs/EVALUATION.md) | The generated evaluation, with its own limitations |
+| [`docs/BREAKAGE.md`](docs/BREAKAGE.md) | What broke during the build, in order, with what it cost |
+| [`docs/decisions/`](docs/decisions/) | Architecture decision records |
