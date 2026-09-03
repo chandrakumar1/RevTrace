@@ -31,7 +31,7 @@ RevTrace measures the difference — and refuses to act when it cannot tell.
 > application's first two pages are static and unaffected; only the live demo
 > waits on the API.
 
-## Judge flow
+## Explore the project
 
 Five steps, nothing to install.
 
@@ -39,11 +39,10 @@ Five steps, nothing to install.
 |---|---|---|
 | 1 | [**Overview**](https://revtrace-overview.onrender.com) | The problem, the experiment, and why abstention matters — in about ninety seconds. |
 | 2 | [**Application**](https://revtrace-frontend.onrender.com) | The product itself. Three pages. |
-| 3 | **Incrementality Ledger** (opens here) | Gross recovered, incremental recovered, and **credited-not-earned** — the gap, which is the money a conventional dashboard would have claimed. That gap is the pitch. |
-| 4 | **Evaluation** | Cross-fitted uplift, Qini, quadrant labels — beside a limitations section carrying equal weight. An undefined Qini coefficient renders as `undefined`, never as `0`. |
+| 3 | **Incrementality Ledger** | Gross recovered, incremental recovered, and **credited-not-earned** — the gap, which is the money a conventional dashboard would have claimed. That gap is the pitch. |
+| 4 | **Evaluation** | Cross-fitted uplift, Qini, quadrant labels — beside a limitations section carrying equal weight. |
 | 5 | **Live demo → ▶ Run Demo** | Six steps. Watch the payment advance `failed → captured`, the replay change nothing, and two attacks get refused. |
 
-The closing line is on screen: *Rolled back — nothing persisted.*
 
 Localhost is **not** required to review this project. Local setup is documented
 under [Local development](#local-development) for contributors.
