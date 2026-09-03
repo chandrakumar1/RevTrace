@@ -3,10 +3,16 @@
 A public showcase site for **RevTrace** — a five-section page that explains the
 idea in about ninety seconds and then gets out of the way.
 
-**This is not the RevTrace application.** It is a separate, self-contained
-project with its own design system and no dependency on the application: no API
-calls, no backend, no shared components, no build-time link between the two
-repositories. It renders identically whether or not RevTrace is running.
+Live at <https://revtrace-overview.onrender.com>.
+
+**This is not the RevTrace application, and not part of its UI.** It lives in the
+same repository as the application but is a separate site with its own design
+system, its own build, and its own deployment: no API calls, no backend, no
+shared components, and no imports in either direction. It renders identically
+whether or not RevTrace is running — which is the point, since a showcase has to
+work when the API is asleep.
+
+The application is [`../frontend/`](../frontend/), and it deploys separately.
 
 ## The idea
 
@@ -27,10 +33,14 @@ It also declines to act when the evidence does not support it, keeps every
 numerical decision in deterministic code rather than in a language model, and
 refuses payment events that fail verification.
 
-## See the real project
+## Links
 
-- **Application** — <https://revtrace-frontend.onrender.com>
-- **Source** — <https://github.com/chandrakumar1/RevTrace>
+| | |
+|---|---|
+| **This site** | <https://revtrace-overview.onrender.com> |
+| **The application** | <https://revtrace-frontend.onrender.com> |
+| **The API** | <https://revtrace-backend.onrender.com> |
+| **Source** | <https://github.com/chandrakumar1/RevTrace> |
 
 ## Data integrity
 
@@ -52,14 +62,18 @@ transaction has ever been processed.
 
 ## Running it
 
+From the repository root:
+
 ```sh
+cd overview
 npm install
 npm run dev        # http://localhost:5173
 npm run typecheck
 npm run build
 ```
 
-Requires Node 20.19+.
+Requires Node 20.19+. This has its own `package.json` and lockfile, separate
+from the application's — installing here does not touch `frontend/`.
 
 ## Layout
 

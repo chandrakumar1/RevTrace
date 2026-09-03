@@ -2,19 +2,25 @@
 
 React 19 · Vite 7 · TypeScript · Tailwind CSS 4
 
+**This is the RevTrace application**, deployed at
+<https://revtrace-frontend.onrender.com>.
+
+Not to be confused with [`overview/`](../overview/), which is a separate public
+showcase site. It deploys on its own, shares no code with this app, and never
+calls the API. This directory is the product; that one explains it.
+
 **No charting library.** The visualisations are laid out with CSS from the
 report payload. Every visible number comes from the backend through a formatter,
 and nothing on screen is derived from layout geometry.
 
 **Status: three pages.** The incrementality ledger and the evaluation view read
-committed fixtures; the live demo calls the backend. The remaining dashboard
-views listed at the bottom of this file are still to come.
+committed fixtures; the live demo calls the backend.
 
 ## Local development
 
 ```sh
 cd frontend
-npm install     # required once — nothing is installed yet
+npm install
 npm run dev     # Vite dev server
 npm run build   # tsc -b && vite build
 npm run typecheck
@@ -91,7 +97,7 @@ refused by the browser.
 `VITE_API_BASE_URL` sets the API origin at **build** time:
 
 ```sh
-VITE_API_BASE_URL=https://your-backend.example.com npm run build
+VITE_API_BASE_URL=https://revtrace-backend.onrender.com npm run build
 ```
 
 Unset, the base is `""` and requests stay relative — the development case, and
@@ -107,12 +113,10 @@ inlined into readable JavaScript. **Never put a secret in one.**
 about which code path is production and which response is synthetic, and a
 claim composed in the browser would be one nobody verified.
 
-## Phase 2 simulator contract
+## The simulator contract
 
-The app itself is built in **Phase 10** — but the simulator data contract was
-settled in Phase 2, so components can be written against real fixtures.
-
-## Build against this now
+The fixtures above come from the synthetic event generator, whose data contract
+is documented separately:
 
 - **Contract:** [`docs/contracts/simulation-fixture.md`](../docs/contracts/simulation-fixture.md)
   — full field reference plus a suggested TypeScript shape.
@@ -123,26 +127,9 @@ settled in Phase 2, so components can be written against real fixtures.
   then read `simulator/output/S05_seed7/frontend.json`. `python -m simulator list`
   shows all 17 scenarios.
 
-Two fields are present and explicitly `null` in Phase 2 — `revenue_risk`
-(filled by Phase 3) and `recovery_state` (Phases 6–9). Build the components and
-leave them empty; their position in the shape will not change.
-
 Money arrives as **integer minor units** under `*_minor` keys. Formatting is the
 frontend's job — never do arithmetic on a formatted string, and never introduce
 a float into a money path.
-
-npm is the package manager — no pnpm, yarn or bun lockfile is maintained.
-
-## Planned views
-
-| View | Shows |
-|---|---|
-| **Overview** | Revenue at risk, potentially recoverable revenue, recovered revenue, recovery rate, active cases, leakage by cause |
-| **Leak Explorer** | Major revenue leak categories and affected revenue |
-| **Investigation** | One case: customer, order, amount, timeline, payment attempts, evidence, root-cause explanation, confidence |
-| **Recovery Simulator** | Candidate interventions with expected recovery, estimated cost, risk, confidence, net expected recovery |
-| **Execution Gate** | Action, parameters, policy checks, confidence, approval status — requires an explicit human action before execution |
-| **Audit Trail** | Detection, diagnosis, recommendation, policy decision, execution, verification, final result |
 
 ## Hard rule
 

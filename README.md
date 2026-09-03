@@ -5,6 +5,27 @@
 > RevTrace is a revenue recovery system that can prove how much of the money it
 > recovered it actually caused — and that refuses to act when it cannot.
 
+## Live
+
+| | |
+|---|---|
+| **Start here** — the overview | <https://revtrace-overview.onrender.com> |
+| **The application** | <https://revtrace-frontend.onrender.com> |
+| **The API** | <https://revtrace-backend.onrender.com> |
+| **Source** | <https://github.com/chandrakumar1/RevTrace> |
+
+The overview explains the idea in about ninety seconds. The application is the
+thing itself: the full ledger and evaluation, plus a synthetic recovery you can
+run end to end in the browser.
+
+All three are hosted on Render's free tier, which sleeps when idle — the first
+request after a quiet period can take up to a minute to wake. The overview and
+the application's first two pages are static and unaffected; only the live demo
+waits on the API.
+
+**Every figure on every one of them is synthetic.** No real Razorpay transaction
+has ever been processed — see [§2](#2-demo--synthetic--offline).
+
 ---
 
 ## 1. What RevTrace is, in plain terms
@@ -65,9 +86,15 @@ A clean modular monolith. No microservices.
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
+│  overview/    the public showcase — deploys on its own            │
+│               static throughout · no API call, ever               │
+└───────────────────────────────────────────────────────────────────┘
+        (no dependency in either direction — see below)
+
+┌───────────────────────────────────────────────────────────────────┐
 │  frontend/           React 19 · Vite 7 · TypeScript · Tailwind 4  │
 │  Page 1 Ledger  ·  Page 2 Evaluation  ─── committed fixtures      │
-│  Page 3 Live demo ──────────────────────── /api (dev proxy)       │
+│  Page 3 Live demo ──────────────────────── /api                   │
 └────────────────────────────────┬──────────────────────────────────┘
                                  │
 ┌────────────────────────────────▼──────────────────────────────────┐
@@ -92,6 +119,18 @@ A clean modular monolith. No microservices.
                                  │
      revtrace_dev  ·  revtrace_test  ·  revtrace_hypothesis_test
 ```
+
+### `overview/` — the showcase, and why it is separate
+
+`overview/` is a public storytelling site, not part of the application UI. It
+shares nothing with `frontend/`: no components, no design system, no build, no
+imports in either direction. It makes **no API call at all** — every figure it
+shows is compiled in from its own local evidence module, transcribed from the
+generated artifacts with the artifact path recorded beside each value.
+
+That independence is deliberate. The showcase must render when the API is
+asleep, and the application must not acquire a dependency on marketing copy. The
+two live in one repository and deploy as two separate sites.
 
 ### The causal / decision layer
 
@@ -252,7 +291,7 @@ Measured on the current tree:
 
 | Check | Result |
 |---|---|
-| **Full test suite** | **4,573 passed · 0 failed · 0 skipped** (11m 43s) |
+| **Full test suite** | **4,604 passed · 0 failed · 0 skipped** (11m 31s) |
 | Integration-adapter suite (`tests/integrations`) | 208 passed |
 | `ruff check` | clean |
 | `ruff format --check` | clean, 223 files |
@@ -269,6 +308,7 @@ are in before something appears not to work.
 
 | | Needs a backend? | Needs a database? |
 |---|---|---|
+| **The overview site** — the public showcase | **No.** Never calls one | No |
 | **Static pages** — the ledger and the evaluation | **No.** Committed fixtures, read at build time | No |
 | **Interactive synthetic demo** — the *Live demo* page | Yes, but only when you press **Run Demo** | Yes, a throwaway one |
 | **Full local setup** — the API, `/docs`, the whole suite | Yes | Yes |
@@ -375,16 +415,22 @@ cd backend
 .venv/bin/python -m pytest -m "not db"  # hermetic only; no PostgreSQL needed
 ```
 
-## 10. Deploying it
+## 10. How it is deployed
 
-The demo runs entirely on a laptop and needs nothing hosted. If you want it
-reachable, the buildathon-shaped deployment is:
+Three separate Render services, plus a hosted PostgreSQL instance:
 
-| Component | Host |
-|---|---|
-| Frontend | **Vercel** |
-| Backend | **Render** |
-| PostgreSQL | **Supabase**, Neon, or Render's managed PostgreSQL |
+| Component | Source | URL |
+|---|---|---|
+| Overview — the public showcase | `overview/` | <https://revtrace-overview.onrender.com> |
+| Application | `frontend/` | <https://revtrace-frontend.onrender.com> |
+| API | `backend/` | <https://revtrace-backend.onrender.com> |
+| PostgreSQL | — | managed, not public |
+
+`overview/` and `frontend/` are independent static builds from the same
+repository and deploy as separate sites. The overview never calls the API, so it
+is unaffected by the backend's state.
+
+Everything below is what makes that work, and what breaks it.
 
 **A cloud backend cannot reach your laptop's PostgreSQL.** `localhost:5432` on
 Render means *Render's* localhost, where nothing is listening. The database must
@@ -399,7 +445,7 @@ the API is. Two supported ways:
 
 | | Frontend build | Backend |
 |---|---|---|
-| **Absolute API URL** | `VITE_API_BASE_URL=https://your-backend.example.com` | `FRONTEND_ORIGIN=https://your-frontend.example.com` |
+| **Absolute API URL** | `VITE_API_BASE_URL=https://revtrace-backend.onrender.com` | `FRONTEND_ORIGIN=https://revtrace-frontend.onrender.com` |
 | **Same-origin rewrite** | leave `VITE_API_BASE_URL` unset; add a host rewrite from `/api/*` to the backend | leave `FRONTEND_ORIGIN` unset |
 
 The first is explicit and works on any static host. The second keeps the
@@ -450,16 +496,20 @@ about what it has not proven.
   authentication and authorisation, rate limiting, secret management and
   rotation, backups, monitoring and alerting, and a real Test Mode integration
   before any Live Mode conversation.
-- `revtrace_dev` is currently one migration behind head. It is not used by tests
-  or the demo, so nothing depends on it.
 
 ## 12. Judge's demo script
 
-Two minutes, four clicks.
+Two minutes, nothing to install.
 
-**Before you start** — two terminals, as in [§9](#9-running-it-locally):
-`uvicorn` with `DEMO_DATABASE_URL` set, and `npm run dev`. Then open
-**http://localhost:5173**.
+**Start:** <https://revtrace-overview.onrender.com> — about ninety seconds, and
+it explains the idea before you see any of the machinery.
+
+**Then:** <https://revtrace-frontend.onrender.com> — the application itself, and
+the four steps below.
+
+Both are on Render's free tier and sleep when idle; the first load after a quiet
+period can take up to a minute. Running it on your own machine instead is
+[§9](#9-running-it-locally) — that is the development path, not the way in.
 
 | # | Click | What to look for |
 |---|---|---|
@@ -518,8 +568,9 @@ Three things worth asking about:
 │   │   ├── integrations/  razorpay/ — the provider boundary
 │   │   └── db/            Session and engine setup
 │   ├── alembic/           Migrations (head: 9c41e07b2d58)
-│   └── tests/             4,573 tests, plus the benchmark harness
-├── frontend/              React 19 · Vite 7 · TypeScript · Tailwind 4
+│   └── tests/             4,604 tests, plus the benchmark harness
+├── frontend/              The application — React 19 · Vite 7 · Tailwind 4
+├── overview/              The public showcase — separate site, no API calls
 └── simulator/             Synthetic event generator, potential outcomes
 ```
 

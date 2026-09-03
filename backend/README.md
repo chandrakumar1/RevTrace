@@ -12,6 +12,16 @@ verification, and a browser-facing offline demo — **11 API operations**.
 exercised against a deterministic synthetic offline provider. See the root
 [README](../README.md#2-demo--synthetic--offline).
 
+## Deployed
+
+The API runs at **<https://revtrace-backend.onrender.com>**, with interactive
+docs at [`/docs`](https://revtrace-backend.onrender.com/docs) and the schema at
+`/openapi.json`. It is on Render's free tier and sleeps when idle, so the first
+request after a quiet period can take up to a minute.
+
+**Everything below is for local development.** You do not need any of it to use
+the deployed application — see the root [README](../README.md#live).
+
 ## Python version — read this first
 
 The backend targets **Python 3.13** (pinned in `.python-version` and
@@ -78,6 +88,25 @@ Deliberately separate from `DATABASE_URL`, because the demo writes rows and
 demo transaction is always rolled back — there is no HTTP equivalent of
 `run_demo.py --commit`.
 
+## Running it hosted
+
+What a deployment needs to set. No credential appears in this repository, and
+none of these values is recorded here.
+
+| Variable | What it must be |
+|---|---|
+| `DATABASE_URL` | The hosted PostgreSQL DSN. A bare `postgres://` or `postgresql://` URL is accepted and normalised to the psycopg 3 driver, so a provider-issued URL works as given. |
+| `DEMO_DATABASE_URL` | A **throwaway** database for the browser demo, never the one `DATABASE_URL` names. Leaving it unset disables the demo endpoint. |
+| `FRONTEND_ORIGIN` | The application's origin, when the frontend is built with an absolute `VITE_API_BASE_URL`. One origin, scheme and host, no trailing slash. Empty means no CORS middleware is installed at all. |
+| `APP_ENV` | `production` disables `/docs` and `/redoc`. |
+
+Run `alembic upgrade head` against the hosted DSN before first boot.
+
+The demo endpoint rolls its transaction back on every call, so a hosted demo
+database accumulates nothing — but it still must not be a database anything else
+depends on. `revtrace_dev` and `revtrace_hypothesis_test` are refused by name
+regardless of what is configured.
+
 ## Layout
 
 ```
@@ -114,7 +143,7 @@ app/
 │   └── razorpay/     client · payment_links · webhooks · mapper · demo
 └── db/               Engine, session, base
 alembic/              Migrations — head: 9c41e07b2d58
-tests/                4,573 tests
+tests/                4,604 tests
 ├── integration/      DB-backed: ingestion, assignment, persistence
 ├── integrations/     Adapter boundary: client, links, webhooks, demo
 ├── evaluation/       TP/FP/FN harness + 17 regression fixtures
@@ -208,7 +237,7 @@ falls back to a developer's personal DSN.
 ## Testing
 
 ```bash
-pytest                    # everything — 4,573 passed, 0 failed, 0 skipped
+pytest                    # everything — 4,604 passed, 0 failed, 0 skipped
 pytest -m "not db"        # hermetic only; no PostgreSQL needed
 pytest -m db              # integration + API, against revtrace_test
 ```

@@ -61,7 +61,7 @@ They are load-bearing for claims the project makes publicly.
 | `frontend/src/fixtures/*.json` | Committed backend output; hand-editing makes them evidence of nothing |
 
 **Run the full test suite before and after touching any of them.** The current
-baseline is **4,573 passed, 0 failed, 0 skipped**.
+baseline is **4,604 passed, 0 failed, 0 skipped**.
 
 ## 4. Rules that are not style preferences
 
@@ -168,7 +168,7 @@ was skipped, say that. Do not describe planned work as completed work.
 
 ```bash
 cd backend
-.venv/bin/python -m pytest                 # 4,573 passed
+.venv/bin/python -m pytest                 # 4,604 passed
 .venv/bin/ruff check app tests ../simulator
 .venv/bin/ruff format --check app tests ../simulator
 .venv/bin/mypy app
